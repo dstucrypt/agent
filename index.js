@@ -19,6 +19,30 @@ var date_str = function(d) {
     return d.toISOString().replace(/[\-T:Z.]/g, '').slice(0, 14);
 };
 
+var algos = function () {
+    return {
+        kdf: em_gost.gost_kdf,
+        keywrap: em_gost.gost_keywrap,
+        keyunwrap: em_gost.gost_unwrap,
+        encrypt: em_gost.gost_encrypt_cfb,
+        decrypt: em_gost.gost_decrypt_cfb,
+        hash: em_gost.compute_hash,
+        storeload: em_gost.decode_data,
+    };
+};
+
+var key_param_parse = function(key) {
+    var pw;
+    if (key.indexOf(':') !== -1) {
+        pw = key.substr(key.indexOf(':') + 1);
+        key = key.substr(0, key.indexOf(':'));
+    }
+    return {
+        path: key,
+        pw: pw,
+    };
+};
+
 var do_sc = function(shouldSign, shouldCrypt, key, cert, inputF, outputF, certRecF, edrpou, email, filename) {
     var content = fs.readFileSync(inputF);
 
@@ -29,28 +53,14 @@ var do_sc = function(shouldSign, shouldCrypt, key, cert, inputF, outputF, certRe
         shouldCrypt = true;
     }
 
-    var algo = {
-        kdf: em_gost.gost_kdf,
-        keywrap: em_gost.gost_keywrap,
-        keyunwrap: em_gost.gost_unwrap,
-        encrypt: em_gost.gost_encrypt_cfb,
-        decrypt: em_gost.gost_decrypt_cfb,
-        hash: em_gost.compute_hash,
-        storeload: em_gost.decode_data,
-    };
-
-    var pw;
-    if (key.indexOf(':') !== -1) {
-        pw = key.substr(key.indexOf(':') + 1);
-        key = key.substr(0, key.indexOf(':'));
-    }
+    key = key_param_parse(key);
     var box = new Box({
         keys: [{
-                privPath: key,
+                privPath: key.path,
                 certPath: cert,
-                password: pw,
+                password: key.pw,
         }],
-        algo: algo,
+        algo: algos()
     });
     
     var ipn_ext = box.keys[0].cert.extension.ipn;
@@ -94,6 +104,31 @@ var do_sc = function(shouldSign, shouldCrypt, key, cert, inputF, outputF, certRe
     fs.writeFileSync(outputF, transport_b);
 };
 
+var do_parse = function(inputF, outputF, key) {
+    var content = fs.readFileSync(inputF);
+
+    key = key_param_parse(key); 
+    var box = new Box({
+        keys: [{
+                privPath: key.path,
+                certPath: null,
+                password: key.pw,
+        }],
+        algo: algos()
+    });
+
+    var textinfo = box.unwrap(content);
+    if (typeof outputF === 'string') {
+        fs.writeFileSync(outputF, textinfo.content);
+    } else {
+        console.log(textinfo.content.toString());
+    }
+};
+
 if (argv.sign || argv.crypt) {
     do_sc(argv.sign, argv.crypt, argv.key, argv.cert, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename);
+}
+
+if (argv.decrypt) {
+    do_parse(argv.input, argv.output, argv.key);
 }
