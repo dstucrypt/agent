@@ -1,6 +1,6 @@
 {
-  "name": "sign-agent",
-  "version": "0.0.1",
+  "name": "dstucrypt-agent",
+  "version": "0.0.2",
   "description": "Signing tool for DSTU4145",
   "main": "index.js",
   "scripts": {
