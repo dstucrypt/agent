@@ -45,7 +45,20 @@ var key_param_parse = function(key) {
     };
 };
 
-var do_sc = function(shouldSign, shouldCrypt, key, cert, inputF, outputF, certRecF, edrpou, email, filename) {
+var get_box = function(key, cert) {
+    key = key_param_parse(key);
+    return new Box({
+        keys: [{
+                privPath: key.path,
+                certPath: cert,
+                password: key.pw,
+        }],
+        algo: algos()
+    });
+
+};
+
+var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename) {
     var content = fs.readFileSync(inputF);
 
     var buf, cert_rcrypt;
@@ -54,16 +67,6 @@ var do_sc = function(shouldSign, shouldCrypt, key, cert, inputF, outputF, certRe
         cert_rcrypt = Certificate.from_asn1(buf);
         shouldCrypt = true;
     }
-
-    key = key_param_parse(key);
-    var box = new Box({
-        keys: [{
-                privPath: key.path,
-                certPath: cert,
-                password: key.pw,
-        }],
-        algo: algos()
-    });
     
     var ipn_ext = box.keys[0].cert.extension.ipn;
     var subject = box.keys[0].cert.subject;
@@ -102,22 +105,18 @@ var do_sc = function(shouldSign, shouldCrypt, key, cert, inputF, outputF, certRe
             pipe.push('sign');
         }
     }
-    var transport_b = box.pipe(content, pipe, opts);
-    fs.writeFileSync(outputF, transport_b);
+    var synctb = box.pipe(content, pipe, opts, function (tb) {
+        fs.writeFileSync(outputF, tb);
+        box.sock.unref();
+    });
+    if (Buffer.isBuffer(synctb)) {
+        fs.writeFileSync(outputF, synctb);
+    }
 };
 
 var do_parse = function(inputF, outputF, key) {
     var content = fs.readFileSync(inputF);
-
-    key = key_param_parse(key); 
-    var box = new Box({
-        keys: [{
-                privPath: key.path,
-                certPath: null,
-                password: key.pw,
-        }],
-        algo: algos()
-    });
+    var box = get_box(key, null);
 
     var textinfo = box.unwrap(content);
     if (typeof outputF === 'string') {
@@ -128,7 +127,14 @@ var do_parse = function(inputF, outputF, key) {
 };
 
 if (argv.sign || argv.crypt) {
-    do_sc(argv.sign, argv.crypt, argv.key, argv.cert, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename);
+    var withBox = function(box) {
+        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename);
+    };
+    if(argv.connect) {
+        client.remoteBox(withBox);
+    } else {
+        withBox(get_box(argv.key, argv.cert));
+    }
 }
 
 if (argv.decrypt) {
@@ -136,9 +142,5 @@ if (argv.decrypt) {
 }
 
 if (argv.agent) {
-    daemon.start({});
-}
-
-if (argv.connect) {
-    client.connect({});
+    daemon.start({box: get_box(argv.key, argv.cert)});
 }
