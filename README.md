@@ -36,6 +36,15 @@ Notice, that both certificates are specified. This is implementation requirement
                 --cert cert.sign.der --cert cert.cryp.der \
                 --input zvit.xml --output zvit.xml.sign.enc
 
+## Unwrap
+
+To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. Notice that certificate is nod required here.
+
+    node index.js --decrypt \
+                --key fop_acsk.raw.der \
+                --input incoming.encrypted \
+                --output clear
+
 ## Agent mode
 
 Signer can operate as out-of-process agent. One process would load key storage and listen to local socket,
@@ -49,3 +58,9 @@ Example:
     node index.js --connect \
                   --sign \
                   --input zvit.xml --output zvit.xml.sign
+
+
+Agent mode is available for encrypt and unwrap operations as well:
+
+    # start agent as specified above
+    node index.js --decrypt --connect --input encrypted.pkcs7 --output clear
