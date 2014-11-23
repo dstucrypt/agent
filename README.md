@@ -64,3 +64,16 @@ Agent mode is available for encrypt and unwrap operations as well:
 
     # start agent as specified above
     node index.js --decrypt --connect --input encrypted.pkcs7 --output clear
+
+
+## Key unwrapper
+
+Normaly keys are stored inside encrypted file called Key-6.dat that requires password
+to be decrypted every time it is being loaded.
+
+However you can remove this protection from and store raw version of file.
+
+    node index.js --unprotect --key Key-6.dat:password --output fop_acsk.raw.der
+    node index.js --unprotect --key Key-6.dat:password > fop_acsk.raw.pem
+
+Notice that without `--output` argument, private is outputed to standard output in PEM form.
