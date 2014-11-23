@@ -61,10 +61,10 @@ var get_box = function(key, cert) {
 var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename) {
     var content = fs.readFileSync(inputF);
 
-    var buf, cert_rcrypt;
+    var cert_rcrypt, buf;
     if (shouldCrypt) {
         buf = fs.readFileSync(certRecF || shouldCrypt);
-        cert_rcrypt = Certificate.from_asn1(buf);
+        cert_rcrypt = Certificate.from_asn1(buf).as_pem();
         shouldCrypt = true;
     }
     
