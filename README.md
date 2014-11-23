@@ -35,3 +35,17 @@ Notice, that both certificates are specified. This is implementation requirement
                 --key Key-6.dat:password \
                 --cert cert.sign.der --cert cert.cryp.der \
                 --input zvit.xml --output zvit.xml.sign.enc
+
+## Agent mode
+
+Signer can operate as out-of-process agent. One process would load key storage and listen to local socket,
+while other would pass data to be signed to it.
+
+Example:
+
+    node index.js --agent \
+                  --key Key-6.dat:password \
+                  --cert cert.ipp.sign --cert cert.ipp.cryp &
+    node index.js --connect \
+                  --sign \
+                  --input zvit.xml --output zvit.xml.sign
