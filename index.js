@@ -114,9 +114,8 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     }
 };
 
-var do_parse = function(inputF, outputF, key) {
+var do_parse = function(inputF, outputF, box) {
     var content = fs.readFileSync(inputF);
-    var box = get_box(key, null);
 
     var textinfo = box.unwrap(content);
     if (typeof outputF === 'string') {
@@ -138,7 +137,15 @@ if (argv.sign || argv.crypt) {
 }
 
 if (argv.decrypt) {
-    do_parse(argv.input, argv.output, argv.key);
+    var withBoxDec = function(box) {
+        do_parse(argv.input, argv.output, box);
+    };
+
+    if(argv.connect) {
+        client.remoteBox(withBoxDec);
+    } else {
+        withBoxDec(get_box(argv.key, null));
+    }
 }
 
 if (argv.agent) {
