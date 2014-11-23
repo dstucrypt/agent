@@ -3,7 +3,9 @@ var argv = require('yargs')
     .usage('Sign, encrypt or decrypt UASIGN files')
     .argv;
 
-var fs = require('fs'),
+var daemon = require('./lib/frame/daemon.js'),
+    client = require('./lib/frame/client.js'),
+    fs = require('fs'),
     encoding = require("encoding"),
     em_gost = require('em-gost'),
     jk = require('jkurwa'),
@@ -131,4 +133,12 @@ if (argv.sign || argv.crypt) {
 
 if (argv.decrypt) {
     do_parse(argv.input, argv.output, argv.key);
+}
+
+if (argv.agent) {
+    daemon.start({});
+}
+
+if (argv.connect) {
+    client.connect({});
 }
