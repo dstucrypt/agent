@@ -117,11 +117,21 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
 var do_parse = function(inputF, outputF, box) {
     var content = fs.readFileSync(inputF);
 
-    var textinfo = box.unwrap(content);
-    if (typeof outputF === 'string') {
-        fs.writeFileSync(outputF, textinfo.content);
-    } else {
-        console.log(textinfo.content.toString());
+    var unwraped = function(textinfo, content) {
+        content = content || textinfo.content;
+        if (typeof outputF === 'string') {
+            fs.writeFileSync(outputF, content);
+        } else {
+            console.log(content.toString());
+        }
+        if (box.sock) {
+            box.sock.unref();
+        }
+    };
+
+    var syncinf = box.unwrap(content, unwraped);
+    if (typeof syncinf === 'object') {
+        unwraped(syncinf);
     }
 };
 
