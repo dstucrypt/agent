@@ -135,6 +135,40 @@ var do_parse = function(inputF, outputF, box) {
     }
 };
 
+var unprotect = function(key, outputF) {
+    key = key_param_parse(key);
+    var buf = keycoder.maybe_pem(fs.readFileSync(key.path));
+    var store = keycoder.parse(buf);
+    var algo = algos();
+
+    if (store.format === 'x509') {
+        console.log("Not a key " + store.format);
+        return;
+    }
+    if(store.format === 'IIT' || store.format === 'PBES2') {
+        if (!key.pw) {
+            console.log("specify password to decrypt");
+            return;
+        }
+
+        buf = algo.storeload(store, key.pw);
+        if (!buf) {
+            console.log("Cannot decode store");
+        }
+        store = keycoder.parse(buf);
+    }
+    if (!outputF) {
+        console.log('-----BEGIN PRIVATE KEY-----\n' +
+                jk.b64_encode(buf, {line: 16, pad: true}) +
+                '\n-----END PRIVATE KEY-----'
+        );
+        return true;
+
+    }
+    fs.writeFileSync(outputF, buf);
+    return true;
+};
+
 if (argv.sign || argv.crypt) {
     var withBox = function(box) {
         do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename);
@@ -160,4 +194,10 @@ if (argv.decrypt) {
 
 if (argv.agent) {
     daemon.start({box: get_box(argv.key, argv.cert)});
+}
+
+if (argv.unprotect) {
+    if(!unprotect(argv.key, argv.input, argv.output)) {
+        process.exit(1);
+    }
 }
