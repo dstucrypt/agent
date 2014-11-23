@@ -197,7 +197,7 @@ if (argv.agent) {
 }
 
 if (argv.unprotect) {
-    if(!unprotect(argv.key, argv.input, argv.output)) {
+    if(!unprotect(argv.key, argv.output)) {
         process.exit(1);
     }
 }
