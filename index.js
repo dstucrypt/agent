@@ -117,11 +117,44 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
 var do_parse = function(inputF, outputF, box) {
     var content = fs.readFileSync(inputF);
 
+    var winMap = function (header, key) {
+        header[key] = encoding.convert(header[key], 'utf8', 'cp1251').toString();
+    };
+
     var unwraped = function(textinfo, content) {
+        var rpipe = (textinfo.pipe || []);
+        var isWin = false;
+        rpipe.map(function (step) {
+            var x = step.cert;
+            var tr = (step.transport ? step.transport.header : {}) || {};
+            if (tr.ENCODING === 'WIN') {
+                isWin = true;
+                Object.keys(tr).map(winMap.bind(null, tr));
+            }
+            if (tr.SUBJECT) {
+                console.log('Subject:', tr.SUBJECT);
+            }
+            if (tr.FILENAME) {
+                console.log("Filename:", tr.FILENAME);
+            }
+            if (tr.EDRPOU) {
+                console.log('Sent-By-EDRPOU:', tr.EDRPOU);
+            }
+            if (step.signed) {
+                console.log('Signed-By:', x.issuer.commonName);
+                console.log('Signed-By-EDRPOU', x.extension.ipn.EDRPOU);
+            }
+            if (step.enc) {
+                console.log("Encrypted");
+            }
+        });
         content = content || textinfo.content;
         if (typeof outputF === 'string') {
             fs.writeFileSync(outputF, content);
         } else {
+            if (isWin) {
+                content = encoding.convert(content, 'utf-8', 'cp1251');
+            }
             console.log(content.toString());
         }
         if (box.sock) {
