@@ -48,11 +48,8 @@ var key_param_parse = function(key) {
 var get_box = function(key, cert) {
     key = key_param_parse(key);
     return new Box({
-        keys: [{
-                privPath: key.path,
-                certPath: cert,
-                password: key.pw,
-        }],
+        keys: [key],
+        cert: cert,
         algo: algos()
     });
 
