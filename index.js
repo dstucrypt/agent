@@ -7,8 +7,9 @@ var daemon = require('./lib/frame/daemon.js'),
     client = require('./lib/frame/client.js'),
     fs = require('fs'),
     encoding = require("encoding"),
-    em_gost = require('em-gost'),
+    gost89 = require('gost89'),
     jk = require('jkurwa'),
+    algos = gost89.compat.algos,
     Certificate = jk.models.Certificate,
     Box = jk.Box;
 
@@ -19,18 +20,6 @@ var keycoder = new jk.Keycoder();
 var date_str = function(d) {
     d = d || new Date();
     return d.toISOString().replace(/[\-T:Z.]/g, '').slice(0, 14);
-};
-
-var algos = function () {
-    return {
-        kdf: em_gost.gost_kdf,
-        keywrap: em_gost.gost_keywrap,
-        keyunwrap: em_gost.gost_unwrap,
-        encrypt: em_gost.gost_encrypt_cfb,
-        decrypt: em_gost.gost_decrypt_cfb,
-        hash: em_gost.compute_hash,
-        storeload: em_gost.decode_data,
-    };
 };
 
 var key_param_parse = function(key) {

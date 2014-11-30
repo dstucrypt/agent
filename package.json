@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "jkurwa": "0.3.x",
-    "em-gost": "0.1.x",
+    "gost89": "0.1.x",
     "yargs": "1.3.x",
     "encoding": "0.1.x"
   }
