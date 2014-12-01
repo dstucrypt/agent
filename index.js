@@ -180,10 +180,9 @@ var unprotect = function(key, outputF) {
         store = keycoder.parse(buf);
     }
     if (!outputF) {
-        console.log('-----BEGIN PRIVATE KEY-----\n' +
-                jk.b64_encode(buf, {line: 16, pad: true}) +
-                '\n-----END PRIVATE KEY-----'
-        );
+        store.keys.map(function (key) {
+            console.log(key.as_pem());
+        });
         return true;
 
     }
