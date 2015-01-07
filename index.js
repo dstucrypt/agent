@@ -7,15 +7,16 @@ var daemon = require('./lib/frame/daemon.js'),
     client = require('./lib/frame/client.js'),
     fs = require('fs'),
     encoding = require("encoding"),
-    gost89 = require('gost89'),
+    gost89 = require('node-gost89'),
+    gf2m = require('node-gf2m'),
     jk = require('jkurwa'),
     algos = gost89.compat.algos,
     Certificate = jk.models.Certificate,
+    Priv = jk.models.Priv,
     Box = jk.Box;
 
 require('./rand-shim.js');
-
-var keycoder = new jk.Keycoder();
+jk.Field.set_impl(gf2m);
 
 var date_str = function(d) {
     d = d || new Date();
@@ -167,26 +168,9 @@ var do_parse = function(inputF, outputF, box) {
 
 var unprotect = function(key, outputF) {
     key = key_param_parse(key);
-    var buf = keycoder.maybe_pem(fs.readFileSync(key.path));
-    var store = keycoder.parse(buf);
-    var algo = algos();
+    var buf = fs.readFileSync(key.path);
+    var store = Priv.from_protected(buf, key.pw, algos());
 
-    if (store.format === 'x509') {
-        console.log("Not a key " + store.format);
-        return;
-    }
-    if(store.format === 'IIT' || store.format === 'PBES2') {
-        if (!key.pw) {
-            console.log("specify password to decrypt");
-            return;
-        }
-
-        buf = algo.storeload(store, key.pw);
-        if (!buf) {
-            console.log("Cannot decode store");
-        }
-        store = keycoder.parse(buf);
-    }
     if (!outputF) {
         store.keys.map(function (key) {
             console.log(key.as_pem());

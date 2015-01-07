@@ -20,12 +20,12 @@
     "url": "https://github.com/dstucrypt/agent/issues"
   },
   "homepage": "https://github.com/dstucrypt/agent",
-  "devDependencies": {
-  },
+  "devDependencies": {},
   "dependencies": {
+    "encoding": "0.1.x",
     "jkurwa": ">= 0.4.1",
-    "gost89": ">= 0.1.6",
-    "yargs": "1.3.x",
-    "encoding": "0.1.x"
+    "node-gf2m": "^0.1.0",
+    "node-gost89": "^0.1.0",
+    "yargs": "1.3.x"
   }
 }
