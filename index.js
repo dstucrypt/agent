@@ -113,9 +113,15 @@ var do_parse = function(inputF, outputF, box) {
     var unwraped = function(textinfo, content) {
         var rpipe = (textinfo.pipe || []);
         var isWin = false;
+        var isErr = false;
         rpipe.map(function (step) {
             var x = step.cert;
             var tr = (step.transport ? step.transport.header : {}) || {};
+            if (step.error) {
+                isErr = true;
+                console.error("Error occured during unwrap: " + step.error);
+                return;
+            }
             if (tr.ENCODING === 'WIN') {
                 isWin = true;
                 Object.keys(tr).map(winMap.bind(null, tr));
@@ -137,14 +143,16 @@ var do_parse = function(inputF, outputF, box) {
                 console.log("Encrypted");
             }
         });
-        content = content || textinfo.content;
-        if (typeof outputF === 'string') {
-            fs.writeFileSync(outputF, content);
-        } else {
-            if (isWin) {
-                content = encoding.convert(content, 'utf-8', 'cp1251');
+        if (isErr === false) {
+            content = content || textinfo.content;
+            if (typeof outputF === 'string') {
+                fs.writeFileSync(outputF, content);
+            } else {
+                if (isWin) {
+                    content = encoding.convert(content, 'utf-8', 'cp1251');
+                }
+                console.log(content.toString());
             }
-            console.log(content.toString());
         }
         if (box.sock) {
             box.sock.unref();
