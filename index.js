@@ -201,7 +201,7 @@ if (argv.decrypt) {
     if(argv.connect) {
         client.remoteBox(withBoxDec);
     } else {
-        withBoxDec(get_box(argv.key, null));
+        withBoxDec(get_box(argv.key, argv.cert));
     }
 }
 
