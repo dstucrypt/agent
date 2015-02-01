@@ -146,7 +146,9 @@ var do_parse = function(inputF, outputF, box) {
             }
             if (step.signed) {
                 console.log('Signed-By:', x.subject.commonName);
-                console.log('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
+                if (x.extension.ipn && x.extension.ipn.EDRPOU) {
+                    console.log('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
+                }
             }
             if (step.enc) {
                 console.log("Encrypted");
