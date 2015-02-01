@@ -36,16 +36,18 @@ var key_param_parse = function(key) {
 };
 
 var get_box = function(key, cert) {
-    key = key_param_parse(key);
-    return new Box({
-        keys: [{
-                privPath: key.path,
-                certPath: cert,
-                password: key.pw,
-        }],
-        algo: algos()
-    });
+    var param = {algo: algos()};
+    if (key) {
+        key = key_param_parse(key);
+        param.keys = param.keys || [{}];
+        param.keys[0].privPath = key.path;
+        param.keys[0].password = key.pw;
+    }
+    if (cert) {
+        param.keys[0].certPath = cert;
+    }
 
+    return new Box(param);
 };
 
 var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename) {
