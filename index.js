@@ -107,7 +107,13 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
 };
 
 var do_parse = function(inputF, outputF, box) {
-    var content = fs.readFileSync(inputF);
+    var content, content2;
+    if (typeof inputF === 'string') {
+        content = fs.readFileSync(inputF);
+    } else {
+        content = fs.readFileSync(inputF[0]);
+        content2 = fs.readFileSync(inputF[1]);
+    }
 
     var winMap = function (header, key) {
         header[key] = encoding.convert(header[key], 'utf8', 'cp1251').toString();
@@ -162,7 +168,7 @@ var do_parse = function(inputF, outputF, box) {
         }
     };
 
-    var syncinf = box.unwrap(content, unwraped);
+    var syncinf = box.unwrap(content, content2, unwraped);
     if (typeof syncinf === 'object') {
         unwraped(syncinf);
     }
