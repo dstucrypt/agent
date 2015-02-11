@@ -119,7 +119,7 @@ var do_parse = function(inputF, outputF, box) {
         header[key] = encoding.convert(header[key], 'utf8', 'cp1251').toString();
     };
 
-    var unwraped = function(textinfo, content) {
+    var unwraped = function(textinfo, content, outputF) {
         var rpipe = (textinfo.pipe || []);
         var isWin = false;
         var isErr = false;
@@ -158,6 +158,8 @@ var do_parse = function(inputF, outputF, box) {
             content = content || textinfo.content;
             if (typeof outputF === 'string') {
                 fs.writeFileSync(outputF, content);
+            } else if (outputF === null) {
+                console.log('Not enough output files specified, part skipped');
             } else {
                 if (isWin) {
                     content = encoding.convert(content, 'utf-8', 'cp1251');
@@ -172,7 +174,23 @@ var do_parse = function(inputF, outputF, box) {
 
     var syncinf = box.unwrap(content, content2, unwraped);
     if (typeof syncinf === 'object') {
-        unwraped(syncinf);
+        if (typeof syncinf.content === 'object') {
+            if (typeof outputF !== 'object') {
+                outputF = [outputF];
+            }
+            var isFirst = true;
+            for (var file in syncinf.content) {
+                console.log(file);
+                if (outputF[0] === undefined) {
+                    if (!isFirst) outputF[0] = null;
+                }
+                unwraped(syncinf.content[file], undefined, outputF[0]);
+                outputF.shift();
+                isFirst = false;
+            }
+        } else {
+            unwraped(syncinf);
+        }
     }
 };
 

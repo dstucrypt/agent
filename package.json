@@ -23,7 +23,7 @@
   "devDependencies": {},
   "dependencies": {
     "encoding": "0.1.x",
-    "jkurwa": ">= 0.4.1",
+    "jkurwa": ">= 0.4.20",
     "node-gf2m": "^0.1.0",
     "node-gost89": "^0.1.0",
     "yargs": "1.3.x"
