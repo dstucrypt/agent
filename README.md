@@ -77,3 +77,7 @@ However you can remove this protection from and store raw version of file.
     node index.js --unprotect --key Key-6.dat:password > fop_acsk.raw.pem
 
 Notice that without `--output` argument, private is outputed to standard output in PEM form.
+
+## Notes
+
+Starting from jkurwa version 0.4.20, agent can read documents created by "ME.DOC" software.
