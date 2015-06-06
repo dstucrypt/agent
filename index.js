@@ -136,22 +136,22 @@ var do_parse = function(inputF, outputF, box) {
                 Object.keys(tr).map(winMap.bind(null, tr));
             }
             if (tr.SUBJECT) {
-                console.log('Subject:', tr.SUBJECT);
+                console.warn('Subject:', tr.SUBJECT);
             }
             if (tr.FILENAME) {
-                console.log("Filename:", tr.FILENAME);
+                console.warn("Filename:", tr.FILENAME);
             }
             if (tr.EDRPOU) {
-                console.log('Sent-By-EDRPOU:', tr.EDRPOU);
+                console.warn('Sent-By-EDRPOU:', tr.EDRPOU);
             }
             if (step.signed) {
-                console.log('Signed-By:', x.subject.commonName);
+                console.warn('Signed-By:', x.subject.commonName);
                 if (x.extension.ipn && x.extension.ipn.EDRPOU) {
-                    console.log('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
+                    console.warn('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
                 }
             }
             if (step.enc) {
-                console.log("Encrypted");
+                console.warn("Encrypted");
             }
         });
         if (isErr === false) {
