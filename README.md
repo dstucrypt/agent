@@ -10,6 +10,22 @@ Ready to send to tax office:
                 --input zvit.xml --output zvit.xml.sign.enc \
                 --email ilya.muromec@gmail.com
 
+Note: name of input file AND name of email attachment matters for processing server.
+
+Filename format is following:
+
+    '15 01 3225000000 F01 033 05 1 00 0000001 5 12 2015 15 01.xml'
+                            tax period code --^
+                 tax period length in months  --^
+                                        tax year -- ^
+                  code of tax office and region again --^---^
+                                      ^-- document increment id
+                                   ^-- document amendment version
+                                 ^-- document state
+                      ^-- for code and version
+           ^-- your tax id
+        ^-- code of tax office
+     ^-- code of tax region
 
 ## Sign file
 
