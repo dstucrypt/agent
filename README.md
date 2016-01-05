@@ -81,3 +81,10 @@ Notice that without `--output` argument, private is outputed to standard output 
 ## Notes
 
 Starting from jkurwa version 0.4.20, agent can read documents created by "ME.DOC" software.
+
+# Reference
+
+This app is able to sign and encrypt pre-crafted tax reports. Tax report format specifications:
+
+* http://opz.at.ua/index/struktura_fajla_xml/0-57 -- Filename structure and file general file format
+* http://sfs.gov.ua/data/material/000/006/58768/Forms1.htm -- Tax form specification
