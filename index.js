@@ -7,8 +7,7 @@ var daemon = require('./lib/frame/daemon.js'),
     client = require('./lib/frame/client.js'),
     fs = require('fs'),
     encoding = require("encoding"),
-    gost89 = require('node-gost89'),
-    gf2m = require('node-gf2m'),
+    gost89 = require('gost89'),
     jk = require('jkurwa'),
     algos = gost89.compat.algos,
     Certificate = jk.models.Certificate,
@@ -16,7 +15,6 @@ var daemon = require('./lib/frame/daemon.js'),
     Box = jk.Box;
 
 require('./rand-shim.js');
-jk.Field.set_impl(gf2m);
 
 var date_str = function(d) {
     d = d || new Date();
@@ -125,7 +123,7 @@ var do_parse = function(inputF, outputF, box) {
         var isErr = false;
         rpipe.map(function (step) {
             var x = step.cert;
-            var tr = (step.transport ? step.transport.header : {}) || {};
+            var tr = (step.transport ? step.headers : {}) || {};
             if (step.error) {
                 isErr = true;
                 console.error("Error occured during unwrap: " + step.error);
@@ -162,7 +160,7 @@ var do_parse = function(inputF, outputF, box) {
                 if (isWin) {
                     content = encoding.convert(content, 'utf-8', 'cp1251');
                 }
-                console.log(content.toString());
+                process.stdout.write(content);
             }
         }
         if (box.sock) {
