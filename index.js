@@ -204,6 +204,9 @@ var unprotect = function(key, outputF) {
 };
 
 if (argv.sign || argv.crypt) {
+    if (argv.crypt === true && !argv.recipient_cert) {
+        throw new Error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
+    }
     var withBox = function(box) {
         do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role);
     };
