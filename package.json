@@ -3,8 +3,7 @@
   "version": "0.0.2",
   "description": "Signing tool for DSTU4145",
   "main": "index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git@github.com:dstucrypt/agent"
@@ -25,7 +24,7 @@
     "encoding": "0.1.x",
     "gost89": "latest",
     "jksreader": "^1.0.0",
-    "jkurwa": "^0.4.41",
+    "jkurwa": "^0.4.43",
     "yargs": "1.3.x"
   }
 }
