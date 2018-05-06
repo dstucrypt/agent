@@ -23,8 +23,8 @@
   "devDependencies": {},
   "dependencies": {
     "encoding": "0.1.x",
-    "jkurwa": ">= 0.4.1",
     "gost89": "latest",
+    "jkurwa": "^0.4.36",
     "yargs": "1.3.x"
   }
 }

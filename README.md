@@ -29,7 +29,7 @@ Filename format is following:
 
 ## Sign file (czo.gov.ua/verify)
 
-When `--no-tax` option is specified in command line, both transport header and `UA_SIGN1` prefix would be ommited, producing raw ASN1 file in CMS (almosrt) format. Makes most sense to sign contracts and such:
+When `--no-tax` option is specified in command line, both transport header and `UA_SIGN1` prefix would be ommited, producing raw ASN1 file in CMS (almosrt) format. Email option is ignored in this mode, as no transport header is writte. Makes most sense to sign contracts and such:
 
     node index.js --sign \
                 --key Key-6.dat:password \
