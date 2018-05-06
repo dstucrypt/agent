@@ -51,10 +51,12 @@ When `--detached` option is specified in command line, resulting file would only
 
 Since version 0.4.40 it's possible to use use jks files with agent. Since jks file format contains number of keys at the same time, with first key peing electronic stamp (not a personal key), agent not has support of `--role` option in commandline. Possible values are: 
 
-- `director` -- DRFO and EDRPOU codes match, as they would for self-employed ФОП;
-- `stamp` -- DRFO code not present, meaning it's not a personal signature of any natural peson, but stamp belonging to organisation itself;
-- `other` -- DRFO code and EDRPOU don't match;
-- any drfo code belonging to natural person, should be ten-digit value or passport number (for religious people with no DRFO).
+ - personal - certificate belongs to natural person and has no record of any corporate entity;
+ - fop (fizychna osoba pidpryjemets) - certificate belongs to natural person registered as private entrepreneur, technically this means that personal code (10, 9 or 8 digit DRFO) matches corporate code (EDRPOU);
+ - director - certificate either belongs to FOP or natural person that can sign on behalf of corporate entity, technicall this means that corporate code either matches drfo or drfo code is present and corporate code does not belong to natural person;
+ - stamp - certificate belongs to corporate entity itself, not natural person;
+ - other - personal code is present but does not match corporate code (relaxed version of director);
+ - exact personal code (either DRFO or passport number for religious people) to match. should be 10, 9 or 8 characters long.
 
     node index.js --sign \
                 --key Key-6.dat:password \
