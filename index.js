@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 var argv = require('yargs')
     .usage('Sign, encrypt or decrypt UASIGN files')
+    .option('tax', {default: true})
     .argv;
 
 var daemon = require('./lib/frame/daemon.js'),
@@ -48,7 +49,7 @@ var get_box = function(key, cert) {
     return new Box(param);
 };
 
-var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename) {
+var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached) {
     var content = fs.readFileSync(inputF);
 
     var cert_rcrypt, buf;
@@ -61,13 +62,13 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     var ipn_ext = box.keys[0].cert.extension.ipn;
     var subject = box.keys[0].cert.subject;
 
-    var opts;
-    if (email) {
+    var headers;
+    if (email && tax) {
         if (filename === undefined) {
             filename = inputF.replace(/\\/g, '/').split('/');
             filename = filename[filename.length - 1];
         }
-        opts = {
+        headers = {
             CERTYPE: "UA1",
             RCV_NAME: encoding.convert(subject.organizationName, 'cp1251'),
             PRG_TYPE: "TRANSPORT GATE",
@@ -77,25 +78,32 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
             EDRPOU: edrpou || ipn_ext.EDRPOU,
         };
         if (email) {
-            opts.RCV_EMAIL = email;
+            headers.RCV_EMAIL = email;
         }
     }
 
     var pipe = [];
     if (shouldSign === true) {
-        pipe.push('sign');
+        pipe.push({
+          op: 'sign',
+          tax: Boolean(tax),
+          detached: Boolean(detached),
+        });
     }
     if (shouldCrypt === true) {
         pipe.push({
             op: 'encrypt',
             forCert: cert_rcrypt,
-            addCert: true
+            addCert: true,
+            tax: Boolean(tax),
         });
-        if (shouldSign === true) {
-            pipe.push('sign');
-        }
+        pipe.push({
+          op: 'sign',
+          tax: Boolean(tax),
+          detached: Boolean(detached),
+        });
     }
-    var synctb = box.pipe(content, pipe, opts, function (tb) {
+    var synctb = box.pipe(content, pipe, headers, function (tb) {
         fs.writeFileSync(outputF, tb);
         box.sock.unref();
     });
@@ -192,7 +200,7 @@ var unprotect = function(key, outputF) {
 
 if (argv.sign || argv.crypt) {
     var withBox = function(box) {
-        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename);
+        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached);
     };
     if(argv.connect) {
         client.remoteBox(withBox);

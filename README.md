@@ -1,8 +1,8 @@
 # Usage
 
-## Sign and encrypt file with transport header
+## Sign and encrypt file for tax office email gate.
 
-Ready to send to tax office:
+Ready to send to tax office email gate. Would include data, signuture, transport headers with email to send response to among other things:
 
     node index.js --sign --crypt  otrimano.cer \
                 --key Key-6.dat:password \
@@ -27,14 +27,25 @@ Filename format is following:
         ^-- code of tax office
      ^-- code of tax region
 
-## Sign file
+## Sign file (czo.gov.ua/verify)
 
-If email is not specified in commandline, transport header would not be added.
+When `--no-tax` option is specified in command line, both transport header and `UA_SIGN1` prefix would be ommited, producing raw ASN1 file in CMS (almosrt) format. Makes most sense to sign contracts and such:
 
     node index.js --sign \
                 --key Key-6.dat:password \
                 --cert cert.sign.der \
-                --input zvit.xml --output zvit.xml.sign
+                --input zvit.xml --output zvit.xml.sign \
+                --no-tax
+
+## Write detached signature
+
+When `--detached` option is specified in command line, resulting file would only contain signuture. Signed data would not be included. Makes most sense with `--no-tax` present and `--email`` ommited. This is not compatible with tax office email gate:
+
+    node index.js --sign \
+                --key Key-6.dat:password \
+                --cert cert.sign.der \
+                --input zvit.xml --output zvit.xml.sign \
+                --detached --no-tax
 
 ## Load key from nonencrypted store
 
