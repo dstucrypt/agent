@@ -47,6 +47,22 @@ When `--detached` option is specified in command line, resulting file would only
                 --input zvit.xml --output zvit.xml.sign \
                 --detached --no-tax
 
+## Load key from jks store (privatbank)
+
+Since version 0.4.40 it's possible to use use jks files with agent. Since jks file format contains number of keys at the same time, with first key peing electronic stamp (not a personal key), agent not has support of `--role` option in commandline. Possible values are: 
+
+- `director` -- DRFO and EDRPOU codes match, as they would for self-employed ФОП;
+- `stamp` -- DRFO code not present, meaning it's not a personal signature of any natural peson, but stamp belonging to organisation itself;
+- `other` -- DRFO code and EDRPOU don't match;
+- any drfo code belonging to natural person, should be ten-digit value or passport number (for religious people with no DRFO).
+
+    node index.js --sign \
+                --key Key-6.dat:password \
+                --cert cert.sign.der \
+                --input zvit.xml --output zvit.xml.sign \
+                --detached --no-tax \
+                --role stamp
+
 ## Load key from nonencrypted store
 
     node index.js --sign \

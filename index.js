@@ -3,6 +3,7 @@ var argv = require('yargs')
     .usage('Sign, encrypt or decrypt UASIGN files')
     .option('tax', {default: true})
     .option('detached', {default: false})
+    .option('role', {default: 'director'})
     .argv;
 
 var daemon = require('./lib/frame/daemon.js'),
@@ -50,7 +51,7 @@ var get_box = function(key, cert) {
     return new Box(param);
 };
 
-var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached) {
+var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role) {
     var content = fs.readFileSync(inputF);
 
     var cert_rcrypt, buf;
@@ -89,6 +90,7 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           op: 'sign',
           tax: Boolean(tax),
           detached: Boolean(detached),
+          role: role,
         });
     }
     if (shouldCrypt === true) {
@@ -97,11 +99,13 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
             forCert: cert_rcrypt,
             addCert: true,
             tax: Boolean(tax),
+            role: role,
         });
         pipe.push({
           op: 'sign',
           tax: Boolean(tax),
           detached: Boolean(detached),
+          role: role,
         });
     }
     var synctb = box.pipe(content, pipe, headers, function (tb) {
@@ -201,7 +205,7 @@ var unprotect = function(key, outputF) {
 
 if (argv.sign || argv.crypt) {
     var withBox = function(box) {
-        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached);
+        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role);
     };
     if(argv.connect) {
         client.remoteBox(withBox);
