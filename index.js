@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 var argv = require('yargs')
     .usage('Sign, encrypt or decrypt UASIGN files')
     .option('tax', {default: true})
