@@ -1,5 +1,6 @@
 var argv = require('yargs')
     .usage('Sign, encrypt or decrypt UASIGN files')
+    .option('tsp', {default: false})
     .option('tax', {default: true})
     .option('detached', {default: false})
     .option('role', {default: 'director'})
@@ -8,6 +9,8 @@ var argv = require('yargs')
 var daemon = require('./lib/frame/daemon.js'),
     client = require('./lib/frame/client.js'),
     fs = require('fs'),
+    http = require("http"),
+    url = require("url"),
     encoding = require("encoding"),
     gost89 = require('gost89'),
     jk = require('jkurwa'),
@@ -35,8 +38,31 @@ var key_param_parse = function(key) {
     };
 };
 
+var query = function(method, toUrl, headers, payload, cb) {
+    var parsed = url.parse(toUrl);
+    var req = http.request({
+        host:  parsed.host,
+        path: parsed.path,
+        headers: headers,
+        method: method,
+    }, function (res) {
+        var chunks = [];
+        res.on('data', function (chunk) {
+            chunks.push(chunk);
+        });
+        res.on('end', function () {
+            cb(Buffer.concat(chunks));
+        });
+    });
+    req.on('error', function(e) {
+        cb(null);
+    });
+    req.write(payload);
+    req.end();
+};
+
 var get_box = function(key, cert) {
-    var param = {algo: algos()};
+    var param = {algo: algos(), query: query};
     if (key) {
         key = key_param_parse(key);
         param.keys = param.keys || [{}];
@@ -50,7 +76,7 @@ var get_box = function(key, cert) {
     return new Box(param);
 };
 
-var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role) {
+var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp) {
     var content = fs.readFileSync(inputF);
 
     var cert_rcrypt, buf;
@@ -90,6 +116,7 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           tax: Boolean(tax),
           detached: Boolean(detached),
           role: role,
+          tsp: tsp,
         });
     }
     if (shouldCrypt === true) {
@@ -105,15 +132,13 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           tax: Boolean(tax),
           detached: Boolean(detached),
           role: role,
+          tsp: tsp,
         });
     }
-    var synctb = box.pipe(content, pipe, headers, function (tb) {
+    synctb = box.pipe(content, pipe, headers, function (tb) {
         fs.writeFileSync(outputF, tb);
-        box.sock.unref();
+        box.sock && box.sock.unref();
     });
-    if (Buffer.isBuffer(synctb)) {
-        fs.writeFileSync(outputF, synctb);
-    }
 };
 
 var do_parse = function(inputF, outputF, box) {
@@ -207,7 +232,7 @@ if (argv.sign || argv.crypt) {
         throw new Error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
     }
     var withBox = function(box) {
-        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role);
+        do_tsp(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp);
     };
     if(argv.connect) {
         client.remoteBox(withBox);

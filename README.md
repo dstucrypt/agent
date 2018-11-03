@@ -5,6 +5,7 @@
 Ready to send to tax office email gate. Would include data, signuture, transport headers with email to send response to among other things:
 
     node index.js --sign --crypt  otrimano.cer \
+                --tsp \
                 --key Key-6.dat:password \
                 --cert cert.sign.der --cert cert.cryp.der \
                 --input zvit.xml --output zvit.xml.sign.enc \
@@ -83,12 +84,23 @@ Notice, that both certificates are specified. This is implementation requirement
 
 ## Unwrap
 
-To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. Notice that certificate is nod required here.
+To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. Notice that certificate is not required here.
 
     node index.js --decrypt \
                 --key fop_acsk.raw.der \
                 --input incoming.encrypted \
                 --output clear
+
+## Tsp
+
+To add secure timestamp, use `--tsp` command-line switch.
+
+     node index.js --sign \
+                --tsp \
+                --key Key-6.raw \
+                --cert cert.sign.der \
+                --input zvit.xml --output zvit.xml.sign
+
 
 ## Agent mode
 
@@ -133,3 +145,4 @@ This app is able to sign and encrypt pre-crafted tax reports. Tax report format 
 
 * http://opz.at.ua/index/struktura_fajla_xml/0-57 -- Filename structure and file general file format
 * http://sfs.gov.ua/data/material/000/006/58768/Forms1.htm -- Tax form specification
+* http://github.com/muromec/taxes-ua -- Tax difference calculator
