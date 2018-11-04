@@ -232,7 +232,7 @@ if (argv.sign || argv.crypt) {
         throw new Error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
     }
     var withBox = function(box) {
-        do_tsp(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp);
+        do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp);
     };
     if(argv.connect) {
         client.remoteBox(withBox);
