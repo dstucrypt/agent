@@ -91,7 +91,7 @@ To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. No
                 --input incoming.encrypted \
                 --output clear
 
-## Tsp
+## TSP
 
 To add secure timestamp, use `--tsp` command-line switch.
 
