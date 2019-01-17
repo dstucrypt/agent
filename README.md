@@ -35,9 +35,18 @@ When `--no-tax` option is specified in command line, both transport header and `
     node index.js --sign \
                 --key Key-6.dat:password \
                 --cert cert.sign.der \
-                --input zvit.xml --output zvit.xml.sign \
+                --input text.pdf --output text.pdf.p7s \
                 --no-tax \
                 --tsp
+                
+Example commandline for privatbank keys:
+    
+    node index.js --sign \
+                --key pb_1234567890.jks:password \
+                --input text.pdf --output text.pdf.p7s \
+                --no-tax \
+                --tsp
+    
 
 ## Write detached signature
 
@@ -58,9 +67,11 @@ Since version 0.4.40 it's possible to use use jks files with agent. Since jks fi
  - director - certificate either belongs to FOP or natural person that can sign on behalf of corporate entity, technicall this means that corporate code either matches drfo or drfo code is present and corporate code does not belong to natural person;
  - stamp - certificate belongs to corporate entity itself, not natural person;
  - other - personal code is present but does not match corporate code (relaxed version of director);
- - exact personal code (either DRFO or passport number for religious people) to match. should be 10, 9 or 8 characters long.
-
-    node index.js --sign \
+ - exact personal code (either DRFO or passport number for religious people) to match. should be 10, 9 or 8 characters long
+ 
+ Example:
+ 
+     node index.js --sign \
                 --key Key-6.dat:password \
                 --cert cert.sign.der \
                 --input zvit.xml --output zvit.xml.sign \
