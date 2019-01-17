@@ -13,7 +13,7 @@ Ready to send to tax office email gate. Would include data, signuture, transport
 
 Note: name of input file AND name of email attachment matters for processing server.
 
-Filename format is following:
+Filename format for tax office is following:
 
     '15 01 3225000000 F01 033 05 1 00 0000001 5 12 2015 15 01.xml'
                             tax period code --^
@@ -36,7 +36,8 @@ When `--no-tax` option is specified in command line, both transport header and `
                 --key Key-6.dat:password \
                 --cert cert.sign.der \
                 --input zvit.xml --output zvit.xml.sign \
-                --no-tax
+                --no-tax \
+                --tsp
 
 ## Write detached signature
 
@@ -93,7 +94,7 @@ To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. No
 
 ## TSP
 
-To add secure timestamp, use `--tsp` command-line switch.
+To add secure timestamp, use `--tsp` command-line switch. Secure timestamp is mandatory for long-term storage since November 7th 2018.
 
      node index.js --sign \
                 --tsp \
