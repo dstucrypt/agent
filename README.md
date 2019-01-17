@@ -60,7 +60,7 @@ When `--detached` option is specified in command line, resulting file would only
 
 ## Load key from jks store (privatbank)
 
-Since version 0.4.40 it's possible to use use jks files with agent. Since jks file format contains number of keys at the same time, with first key peing electronic stamp (not a personal key), agent not has support of `--role` option in commandline. Possible values are: 
+Since version 0.4.40 it's possible to use use jks files with agent. Since jks file format contains number of keys at the same time, with first key being electronic stamp (not a personal key), agent has support of `--role` option in commandline. Possible values are: 
 
  - personal - certificate belongs to natural person and has no record of any corporate entity;
  - fop (fizychna osoba pidpryjemets) - certificate belongs to natural person registered as private entrepreneur, technically this means that personal code (10, 9 or 8 digit DRFO) matches corporate code (EDRPOU);
