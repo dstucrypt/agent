@@ -22,7 +22,24 @@ unwrap () {
   $AGENT --decrypt $@
 }
 
+start_daemon() {
+  cd "$DATA"
+  [ -S "$HOME/.dstu-agent.sock" ] && return 1
+  $AGENT --agent $@ 1> /dev/null & DAEMON=$! ; disown
+  cd - > /dev/null
+
+  while [ ! -S "$HOME/.dstu-agent.sock" ] ; do
+    sleep 0.1
+  done
+}
+
+stop_daemon() {
+  kill -15 $DAEMON
+  rm -f "$HOME/.dstu-agent.sock"
+}
+
 assert () {
+  stop_daemon
   echo FAIL. $@
   exit 1
 }
@@ -101,3 +118,33 @@ Signed-By: Very Much CA
 EOF
 ) \
   "unwrap --input message.transport"
+
+start_daemon --key Key40A0.cer --cert SELF_SIGNED_ENC_40A0.cer
+
+testcase \
+  "Daemon decrypt transport message" \
+  <(echo -n 123) \
+  <(echo Encrypted) \
+  "decrypt --connect --input enc_message.transport"
+
+testcase \
+  "Daemon decrypt message error when sender cert not present" \
+  <(true) \
+  <(cat <<EOF
+Encrypted
+Error occured during unwrap: ENOCERT
+EOF
+) \
+  "decrypt --connect --input enc_message.p7"
+
+stop_daemon
+
+start_daemon --key Key40A0.cer --cert SELF_SIGNED_ENC_40A0.cer --cert SELF_SIGNED_ENC_6929.cer
+
+testcase \
+  "Daemon decrypt message" \
+  <(echo -n 123) \
+  <(echo Encrypted) \
+  "decrypt --connect --input enc_message.p7"
+
+stop_daemon
