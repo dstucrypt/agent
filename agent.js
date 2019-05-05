@@ -13,6 +13,15 @@ var daemon = require('./lib/frame/daemon.js'),
 
 require('./rand-shim.js');
 
+const io = {
+  stdout: process.stdout,
+  stderr: process.stderr,
+};
+
+function error(...all) {
+  all.forEach((path)=> io.stderr.write(path));
+}
+
 var date_str = function(d) {
     d = d || new Date();
     return d.toISOString().replace(/[\-T:Z.]/g, '').slice(0, 14);
@@ -159,7 +168,7 @@ var do_parse = function(inputF, outputF, box) {
             var tr = (step.transport ? step.headers : {}) || {};
             if (step.error) {
                 isErr = true;
-                console.error("Error occured during unwrap: " + step.error);
+                error("Error occured during unwrap: " + step.error);
                 return;
             }
             if (tr.ENCODING === 'WIN') {
@@ -182,7 +191,7 @@ var do_parse = function(inputF, outputF, box) {
                 }
             }
             if (step.enc) {
-                console.warn("Encrypted");
+                error("Encrypted");
             }
         });
         if (isErr === false) {
@@ -193,7 +202,7 @@ var do_parse = function(inputF, outputF, box) {
                 if (isWin) {
                     content = encoding.convert(content, 'utf-8', 'cp1251');
                 }
-                process.stdout.write(content);
+                io.stdout.write(content);
             }
         }
         if (box.sock) {
@@ -225,7 +234,9 @@ var unprotect = function(key, outputF) {
 
 
 
-function run(argv) {
+function run(argv, setIo) {
+  setIo && Object.assign(io, setIo);
+
   if (argv.sign || argv.crypt) {
       if (argv.crypt === true && !argv.recipient_cert) {
           throw new Error('Please specify recipient certificate for encryption mode: --crypt filename.cert');

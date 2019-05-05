@@ -4,7 +4,8 @@
   "description": "Signing tool for DSTU4145",
   "main": "index.js",
   "scripts": {
-    "test": "bash test/test.sh",
+    "shtest": "bash test/test.sh",
+    "test": "mocha --reporter spec ./test/test*.js",
     "bundle": "webpack"
   },
   "repository": {
@@ -23,6 +24,7 @@
   },
   "homepage": "https://github.com/dstucrypt/agent",
   "devDependencies": {
+    "mocha": "^6.1.4",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.2"
   },
