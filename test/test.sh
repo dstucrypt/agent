@@ -6,20 +6,20 @@ AGENT="node $(pwd)/index.js"
 DATA=$(pwd)/node_modules/jkurwa/test/data
 FILTER="$1"
 
-key() {
-  if [ "$1" = "" ]; then
-    echo ""
-  else
-    echo --key "$DATA/$1"
-  fi
-}
-
 decrypt () {
   $AGENT --decrypt $@
 }
 
 unwrap () {
   $AGENT --decrypt $@
+}
+
+sign () {
+  $AGENT --sign $@
+}
+
+encrypt () {
+  $AGENT --crypt $@
 }
 
 start_daemon() {
@@ -34,18 +34,21 @@ start_daemon() {
 }
 
 stop_daemon() {
-  kill -15 $DAEMON
-  rm -f "$HOME/.dstu-agent.sock"
+  if [ "$DAEMON" != "" ]
+  then
+    kill -15 $DAEMON
+    rm -f "$HOME/.dstu-agent.sock"
+  fi
 }
 
 assert () {
   stop_daemon
+  rm -f "$TMPFILE"
   echo FAIL. $@
   exit 1
 }
 
 testcase () {
-  cd $DATA
   TEST="$1"; shift
   EXPECT_OUT="$1"; shift
   EXPECT_ERR="$1"; shift
@@ -65,9 +68,9 @@ testcase () {
   fi
 
   echo PASS. $TEST
-
-  cd - > /dev/null
 }
+
+cd "$DATA"
 
 testcase \
   "Decrypt p7s message" \
@@ -118,6 +121,44 @@ Signed-By: Very Much CA
 EOF
 ) \
   "unwrap --input message.transport"
+
+
+TMPFILE=$(mktemp)
+sign \
+        --no-role \
+        --key PRIV1.cer \
+        --cert SELF_SIGNED1.cer \
+        --input <(echo -n This is me) --output $TMPFILE
+
+testcase \
+  "Sign message and unwrap" \
+  <(echo -n This is me) \
+  <(echo Signed-By: Very Much CA) \
+  "unwrap --input $TMPFILE"
+
+rm $TMPFILE
+
+TMPFILE=$(mktemp)
+encrypt \
+        SELF_SIGNED_ENC_40A0.cer \
+        --no-role \
+        --key Key6929.cer \
+        --cert SELF_SIGNED_ENC_6929.cer \
+        --key PRIV1.cer \
+        --cert SELF_SIGNED1.cer \
+        --input <(echo -n This was encrypted) --output $TMPFILE
+
+testcase \
+  "Encrypt message and decrypt" \
+  <(echo -n This was encrypted) \
+  <(cat <<EOF
+Signed-By: Very Much CA
+Encrypted
+EOF
+) \
+  "unwrap --input $TMPFILE --key Key40A0.cer --cert SELF_SIGNED_ENC_40A0.cer"
+
+rm $TMPFILE
 
 start_daemon --key Key40A0.cer --cert SELF_SIGNED_ENC_40A0.cer
 

@@ -136,7 +136,11 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
         });
     }
     synctb = box.pipe(content, pipe, headers, function (tb) {
-        fs.writeFileSync(outputF, tb);
+        if (typeof outputF === 'string' && outputF !== '-') {
+                fs.writeFileSync(outputF, tb);
+        } else {
+          process.stdout.write(tb);
+        }
         box.sock && box.sock.unref();
     });
 };
@@ -191,7 +195,7 @@ var do_parse = function(inputF, outputF, box) {
         });
         if (isErr === false) {
             content = content || textinfo.content;
-            if (typeof outputF === 'string') {
+            if (typeof outputF === 'string' && outputF !== '-') {
                 fs.writeFileSync(outputF, content);
             } else {
                 if (isWin) {
