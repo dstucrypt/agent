@@ -180,7 +180,7 @@ var do_parse = function(inputF, outputF, box) {
                 console.warn('Sent-By-EDRPOU:', tr.EDRPOU);
             }
             if (step.signed) {
-                console.warn('Signed-By:', x.subject.commonName);
+                console.warn('Signed-By:', x.subject.commonName || x.subject.organizationName);
                 if (x.extension.ipn && x.extension.ipn.EDRPOU) {
                     console.warn('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
                 }

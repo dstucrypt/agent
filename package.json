@@ -4,6 +4,7 @@
   "description": "Signing tool for DSTU4145",
   "main": "index.js",
   "scripts": {
+    "test": "bash test/test.sh",
     "bundle": "webpack"
   },
   "repository": {
