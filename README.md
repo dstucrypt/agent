@@ -13,7 +13,7 @@ Ready to send to tax office email gate. Would include data, signuture, transport
 
 Note: name of input file AND name of email attachment matters for processing server.
 
-Filename format is following:
+Filename format for tax office is following:
 
     '15 01 3225000000 F01 033 05 1 00 0000001 5 12 2015 15 01.xml'
                             tax period code --^
@@ -35,8 +35,18 @@ When `--no-tax` option is specified in command line, both transport header and `
     node index.js --sign \
                 --key Key-6.dat:password \
                 --cert cert.sign.der \
-                --input zvit.xml --output zvit.xml.sign \
-                --no-tax
+                --input text.pdf --output text.pdf.p7s \
+                --no-tax \
+                --tsp
+                
+Example commandline for privatbank keys:
+    
+    node index.js --sign \
+                --key pb_1234567890.jks:password \
+                --input text.pdf --output text.pdf.p7s \
+                --no-tax \
+                --tsp
+    
 
 ## Write detached signature
 
@@ -50,16 +60,18 @@ When `--detached` option is specified in command line, resulting file would only
 
 ## Load key from jks store (privatbank)
 
-Since version 0.4.40 it's possible to use use jks files with agent. Since jks file format contains number of keys at the same time, with first key peing electronic stamp (not a personal key), agent not has support of `--role` option in commandline. Possible values are: 
+Since version 0.4.40 it's possible to use use jks files with agent. Since jks file format contains number of keys at the same time, with first key being electronic stamp (not a personal key), agent has support of `--role` option in commandline. Possible values are: 
 
  - personal - certificate belongs to natural person and has no record of any corporate entity;
  - fop (fizychna osoba pidpryjemets) - certificate belongs to natural person registered as private entrepreneur, technically this means that personal code (10, 9 or 8 digit DRFO) matches corporate code (EDRPOU);
  - director - certificate either belongs to FOP or natural person that can sign on behalf of corporate entity, technicall this means that corporate code either matches drfo or drfo code is present and corporate code does not belong to natural person;
  - stamp - certificate belongs to corporate entity itself, not natural person;
  - other - personal code is present but does not match corporate code (relaxed version of director);
- - exact personal code (either DRFO or passport number for religious people) to match. should be 10, 9 or 8 characters long.
-
-    node index.js --sign \
+ - exact personal code (either DRFO or passport number for religious people) to match. should be 10, 9 or 8 characters long
+ 
+ Example:
+ 
+     node index.js --sign \
                 --key Key-6.dat:password \
                 --cert cert.sign.der \
                 --input zvit.xml --output zvit.xml.sign \
@@ -93,7 +105,7 @@ To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. No
 
 ## TSP
 
-To add secure timestamp, use `--tsp` command-line switch.
+To add secure timestamp, use `--tsp` command-line switch. Secure timestamp is mandatory for long-term storage since November 7th 2018.
 
      node index.js --sign \
                 --tsp \
