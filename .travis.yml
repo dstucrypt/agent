@@ -5,3 +5,4 @@ node_js:
 script:
   - npm run cover
   - codecov
+  - bash test/test.sh
