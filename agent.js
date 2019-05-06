@@ -15,11 +15,15 @@ require('./rand-shim.js');
 
 const io = {
   stdout: process.stdout,
-  stderr: process.stderr,
+  readFileSync: fs.readFileSync,
 };
 
 function error(...all) {
-  all.forEach((path)=> io.stderr.write(path));
+  if (io.stderr) {
+    all.forEach((path)=> io.stderr.write(path));
+  } else {
+    console.error(...all);
+  }
 }
 
 var date_str = function(d) {
@@ -78,7 +82,7 @@ var get_box = function(key, cert) {
 };
 
 var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp) {
-    var content = fs.readFileSync(inputF);
+    var content = io.readFileSync(inputF);
 
     var cert_rcrypt, buf;
     if (shouldCrypt) {
@@ -176,18 +180,18 @@ var do_parse = function(inputF, outputF, box) {
                 Object.keys(tr).map(winMap.bind(null, tr));
             }
             if (tr.SUBJECT) {
-                console.warn('Subject:', tr.SUBJECT);
+                error('Subject:', tr.SUBJECT);
             }
             if (tr.FILENAME) {
-                console.warn("Filename:", tr.FILENAME);
+                error("Filename:", tr.FILENAME);
             }
             if (tr.EDRPOU) {
-                console.warn('Sent-By-EDRPOU:', tr.EDRPOU);
+                error('Sent-By-EDRPOU:', tr.EDRPOU);
             }
             if (step.signed) {
-                console.warn('Signed-By:', x.subject.commonName || x.subject.organizationName);
+                error('Signed-By:', x.subject.commonName || x.subject.organizationName);
                 if (x.extension.ipn && x.extension.ipn.EDRPOU) {
-                    console.warn('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
+                    error('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
                 }
             }
             if (step.enc) {
@@ -197,7 +201,7 @@ var do_parse = function(inputF, outputF, box) {
         if (isErr === false) {
             content = content || textinfo.content;
             if (typeof outputF === 'string' && outputF !== '-') {
-                fs.writeFileSync(outputF, content);
+                io.writeFileSync(outputF, content);
             } else {
                 if (isWin) {
                     content = encoding.convert(content, 'utf-8', 'cp1251');
