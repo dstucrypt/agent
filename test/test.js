@@ -190,6 +190,72 @@ describe('Local Agent', ()=> {
       assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
       assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
     });
+
+    it('write signature to stdout', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me')),
+        output: '-',
+      }, io);
+
+      const signed = Buffer.concat(io.stdout.buffer);
+      io.stdout.buffer = [];
+      agent.run({
+        decrypt: true,
+        input: io.asset('signed.p7s', signed),
+      }, io);
+      assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
+    });
+
+    it('write detached signature to stdout and fail with ENODATA on parse', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        detached: true,
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me')),
+        output: '-',
+      }, io);
+
+      const signed = Buffer.concat(io.stdout.buffer);
+      io.stdout.buffer = [];
+      agent.run({
+        decrypt: true,
+        input: io.asset('signed.p7s', signed),
+      }, io);
+      assert.deepEqual(io.stderr.buffer, ['Error occured during unwrap: ENODATA']);
+      assert.deepEqual(io.stdout.buffer, []);
+    });
+
+    it('write detached signature to stdout and supply two files when parsing', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        detached: true,
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me')),
+        output: '-',
+      }, io);
+
+      const signed = Buffer.concat(io.stdout.buffer);
+      io.stdout.buffer = [];
+      agent.run({
+        decrypt: true,
+        input: [
+          io.asset('signed.p7s', signed),
+          io.asset('clear.txt', Buffer.from('This is me')),
+        ],
+      }, io);
+      assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
+    });
+
   });
 
   describe('encrypt and decrypt', ()=> {
@@ -213,6 +279,44 @@ describe('Local Agent', ()=> {
       assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA', 'Encrypted']);
       assert.deepEqual(io.stdout.buffer, [Buffer.from('This was encrypted')]);
     });
+
+    it('encrypts when recipient is specified with --recipient_cert', ()=> {
+      const io = getIO();
+      agent.run({
+        tax: true,
+        crypt: true,
+        'recipient_cert': asset('SELF_SIGNED_ENC_40A0.cer'),
+        key: [asset('Key6929.cer'), asset('PRIV1.cer')],
+        cert: [asset('SELF_SIGNED_ENC_6929.cer'), asset('SELF_SIGNED1.cer')],
+        input: io.asset('clear.txt', Buffer.from('This was encrypted')),
+        output: io.asset('encrypted.p7s'),
+      }, io);
+
+      agent.run({
+        decrypt: true,
+        input: io.asset('encrypted.p7s'),
+        key: asset('Key40A0.cer'),
+        cert: asset('SELF_SIGNED_ENC_40A0.cer'),
+      }, io);
+      assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA', 'Encrypted']);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This was encrypted')]);
+    });
+
+    it('should fail when encryption recipient not specified', ()=> {
+      const io = getIO();
+      agent.run({
+        tax: true,
+        crypt: true,
+        key: [asset('Key6929.cer'), asset('PRIV1.cer')],
+        cert: [asset('SELF_SIGNED_ENC_6929.cer'), asset('SELF_SIGNED1.cer')],
+        input: io.asset('clear.txt', Buffer.from('This was encrypted')),
+        output: io.asset('encrypted.p7s'),
+      }, io);
+
+      assert.deepEqual(io.stderr.buffer, ['Please specify recipient certificate for encryption mode: --crypt filename.cert']);
+      assert.deepEqual(io.stdout.buffer, []);
+    });
+
   });
 });
 

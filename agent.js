@@ -142,9 +142,9 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     }
     synctb = box.pipe(content, pipe, headers, function (tb) {
         if (typeof outputF === 'string' && outputF !== '-') {
-                fs.writeFileSync(outputF, tb);
+            fs.writeFileSync(outputF, tb);
         } else {
-          process.stdout.write(tb);
+            io.stdout.write(tb);
         }
         box.sock && box.sock.destroy();
         done && done();
@@ -154,10 +154,10 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
 var do_parse = function(inputF, outputF, box, done) {
     var content, content2;
     if (typeof inputF === 'string') {
-        content = fs.readFileSync(inputF);
+        content = io.readFileSync(inputF);
     } else {
-        content = fs.readFileSync(inputF[0]);
-        content2 = fs.readFileSync(inputF[1]);
+        content = io.readFileSync(inputF[0]);
+        content2 = io.readFileSync(inputF[1]);
     }
 
     var winMap = function (header, key) {
@@ -245,7 +245,8 @@ function run(argv, setIo, done) {
 
   if (argv.sign || argv.crypt) {
       if (argv.crypt === true && !argv.recipient_cert) {
-          throw new Error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
+          error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
+          return done && done();
       }
       var withBox = function(box) {
           do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, done);
