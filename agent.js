@@ -81,7 +81,7 @@ var get_box = function(key, cert) {
     return new Box(param);
 };
 
-var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp) {
+var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, done) {
     var content = io.readFileSync(inputF);
 
     var cert_rcrypt, buf;
@@ -147,10 +147,11 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           process.stdout.write(tb);
         }
         box.sock && box.sock.unref();
+        done && done();
     });
 };
 
-var do_parse = function(inputF, outputF, box) {
+var do_parse = function(inputF, outputF, box, done) {
     var content, content2;
     if (typeof inputF === 'string') {
         content = fs.readFileSync(inputF);
@@ -212,6 +213,7 @@ var do_parse = function(inputF, outputF, box) {
         if (box.sock) {
             box.sock.unref();
         }
+        done && done();
     };
 
     var syncinf = box.unwrap(content, content2, unwraped);
@@ -238,7 +240,7 @@ var unprotect = function(key, outputF) {
 
 
 
-function run(argv, setIo) {
+function run(argv, setIo, done) {
   setIo && Object.assign(io, setIo);
 
   if (argv.sign || argv.crypt) {
@@ -246,7 +248,7 @@ function run(argv, setIo) {
           throw new Error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
       }
       var withBox = function(box) {
-          do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp);
+          do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, done);
       };
       if(argv.connect) {
           client.remoteBox(withBox);
@@ -257,7 +259,7 @@ function run(argv, setIo) {
 
   if (argv.decrypt) {
       var withBoxDec = function(box) {
-          do_parse(argv.input, argv.output, box);
+          do_parse(argv.input, argv.output, box, done);
       };
 
       if(argv.connect) {
@@ -267,14 +269,14 @@ function run(argv, setIo) {
       }
   }
 
-  if (argv.agent) {
-      daemon.start({box: get_box(argv.key, argv.cert)});
-  }
-
   if (argv.unprotect) {
       if(!unprotect(argv.key, argv.output)) {
           process.exit(1);
       }
+  }
+
+  if (argv.agent) {
+      return daemon.start({box: get_box(argv.key, argv.cert), silent: argv.silent});
   }
 }
 

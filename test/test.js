@@ -43,7 +43,7 @@ function getIO() {
   };
 }
 
-describe('Agent', ()=> {
+describe('Local Agent', ()=> {
   describe('encypted p7s', ()=> {
     it('Decryption success', ()=> {
       const io = getIO();
@@ -214,5 +214,105 @@ describe('Agent', ()=> {
       assert.deepEqual(io.stdout.buffer, [Buffer.from('This was encrypted')]);
     });
   });
-
 });
+
+describe('Daemon Agent', ()=> {
+  let stopDaemon;
+  afterEach(()=> {
+    stopDaemon && stopDaemon();
+    stopDaemon = null;
+  });
+
+  describe('encypted transport', ()=> {
+    it('Decrypt data', (done)=> {
+      const io = getIO();
+      stopDaemon = agent.run({
+        agent: true,
+        silent: true,
+        key: asset('Key40A0.cer'),
+        cert: [
+          asset('SELF_SIGNED_ENC_40A0.cer'),
+        ],
+      });
+
+      agent.run({
+        decrypt: true,
+        connect: true,
+        input: asset('enc_message.transport'),
+      }, io, function() {
+        assert.deepEqual(io.stderr.buffer, ['Encrypted']);
+        assert.deepEqual(io.stdout.buffer, [Buffer.from('123')]);
+        done();
+      });
+    });
+
+    it('check signature and decrypt', (done)=> {
+      stopDaemon = agent.run({
+        agent: true,
+        silent: true,
+        key: [asset('Key6929.cer'), asset('PRIV1.cer')],
+        cert: [asset('SELF_SIGNED_ENC_6929.cer'), asset('SELF_SIGNED1.cer')],
+      });
+      const io = getIO();
+
+      agent.run({
+        tax: true,
+        connect: true,
+        crypt: asset('SELF_SIGNED_ENC_40A0.cer'),
+        input: io.asset('clear.txt', Buffer.from('This was encrypted')),
+        output: io.asset('encrypted.p7s'),
+      }, io, function () {
+        stopDaemon();
+        stopDaemon = agent.run({
+          agent: true,
+          silent: true,
+          key: asset('Key40A0.cer'),
+          cert: asset('SELF_SIGNED_ENC_40A0.cer'),
+        });
+
+        agent.run({
+          decrypt: true,
+          connect: true,
+          input: io.asset('encrypted.p7s'),
+        }, io, function () {
+
+        assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA', 'Encrypted']);
+        assert.deepEqual(io.stdout.buffer, [Buffer.from('This was encrypted')]);
+        done();
+      })
+      });
+    });
+
+    it('check signature', (done)=> {
+      stopDaemon = agent.run({
+        agent: true,
+        silent: true,
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+      });
+
+      const io = getIO();
+      agent.run({
+        sign: true,
+        connect: true,
+        input: io.asset('clear.txt', Buffer.from('This is me')),
+        output: io.asset('signed.p7s'),
+      }, io, function () {
+      agent.run({
+          decrypt: true,
+          connect: true,
+          input: io.asset('signed.p7s'),
+      }, io, function () {
+
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
+      assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
+      done();
+
+      });
+      });
+
+    });
+
+  });
+});
+
