@@ -146,7 +146,7 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
         } else {
           process.stdout.write(tb);
         }
-        box.sock && box.sock.unref();
+        box.sock && box.sock.destroy();
         done && done();
     });
 };
@@ -211,7 +211,7 @@ var do_parse = function(inputF, outputF, box, done) {
             }
         }
         if (box.sock) {
-            box.sock.unref();
+            box.sock.destroy();
         }
         done && done();
     };
