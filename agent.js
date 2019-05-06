@@ -1,8 +1,7 @@
 var daemon = require('./lib/frame/daemon.js'),
     client = require('./lib/frame/client.js'),
+    http = require('./lib/http'),
     fs = require('fs'),
-    http = require("http"),
-    url = require("url"),
     encoding = require("encoding"),
     gost89 = require('gost89'),
     jk = require('jkurwa'),
@@ -44,31 +43,8 @@ var key_param_parse = function(key) {
     };
 };
 
-var query = function(method, toUrl, headers, payload, cb) {
-    var parsed = url.parse(toUrl);
-    var req = http.request({
-        host:  parsed.host,
-        path: parsed.path,
-        headers: headers,
-        method: method,
-    }, function (res) {
-        var chunks = [];
-        res.on('data', function (chunk) {
-            chunks.push(chunk);
-        });
-        res.on('end', function () {
-            cb(Buffer.concat(chunks));
-        });
-    });
-    req.on('error', function(e) {
-        cb(null);
-    });
-    req.write(payload);
-    req.end();
-};
-
 var get_box = function(key, cert) {
-    var param = {algo: algos(), query: query};
+    var param = {algo: algos(), query: http.query};
     if (key) {
         key = key_param_parse(key);
         param.keys = param.keys || [{}];
