@@ -23,8 +23,7 @@ function getIO() {
     stdout: new IOBuffer(),
     stderr: new IOBuffer(),
     asset: function(filename, contents) {
-      if (!contents) return asset(filename);
-      assets[`/dev/null/${filename}`] = contents;
+      assets[`/dev/null/${filename}`] = contents || this.readAsset(filename) || Buffer.alloc(0);
       return `/dev/null/${filename}`;
     },
     readFileSync: function(filename) {
@@ -109,7 +108,7 @@ describe('Local Agent', ()=> {
       agent.run({
         decrypt: true,
         input: asset('enc_message.transport'),
-        output: io.asset('clear.txt', Buffer.alloc(0)),
+        output: io.asset('clear.txt'),
         key: asset('Key40A0.cer'),
         cert: [
           asset('SELF_SIGNED_ENC_40A0.cer'),
@@ -151,7 +150,7 @@ describe('Local Agent', ()=> {
       agent.run({
         decrypt: true,
         input: asset('message.p7'),
-        output: io.asset('clear.txt', Buffer.alloc(0)),
+        output: io.asset('clear.txt'),
       }, io);
       assert.deepEqual(io.stdout.buffer, []);
       assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
@@ -181,14 +180,14 @@ describe('Local Agent', ()=> {
         cert: asset('SELF_SIGNED1.cer'),
         input: io.asset('clear.txt', Buffer.from('This is me')),
         output: io.asset('signed.p7s'),
-        output: io.asset('signed.p7s', true),
+        output: io.asset('signed.p7s'),
       }, io);
       const signed = io.readAsset('signed.p7s');
       assert.equal(signed[0], 0x30);
 
       agent.run({
         decrypt: true,
-        input: io.asset('signed.p7s', signed),
+        input: io.asset('signed.p7s'),
       }, io);
       assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
       assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
@@ -210,7 +209,7 @@ describe('Local Agent', ()=> {
 
       agent.run({
         decrypt: true,
-        input: io.asset('signed.p7s', signed),
+        input: io.asset('signed.p7s'),
       }, io);
       assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
       assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
@@ -224,7 +223,7 @@ describe('Local Agent', ()=> {
         key: asset('PRIV1.cer'),
         cert: asset('SELF_SIGNED1.cer'),
         input: io.asset('clear.txt', Buffer.from('This is me')),
-        output: io.asset('signed.p7s', true),
+        output: io.asset('signed.p7s'),
         email: 'username@email.example.com',
         edrpou: '1234567891',
       }, io);
@@ -234,7 +233,7 @@ describe('Local Agent', ()=> {
 
       agent.run({
         decrypt: true,
-        input: io.asset('signed.p7s', signed),
+        input: io.asset('signed.p7s'),
       }, io);
       assert.deepEqual(io.stderr.buffer, [
         'Filename:', 'clear.txt',
@@ -291,7 +290,7 @@ describe('Local Agent', ()=> {
       agent.run({
         decrypt: true,
         input: io.asset('signed.p7s', signed),
-        output: io.asset('clear_out.txt', true),
+        output: io.asset('clear_out.txt'),
       }, io);
       assert.deepEqual(io.stderr.buffer, [
         'Filename:', 'clear.txt',
