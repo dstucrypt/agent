@@ -1,3 +1,10 @@
+# DSTU4145 Agent
+
+[![Build Status](https://travis-ci.org/dstucrypt/agent.svg?branch=master)](https://travis-ci.org/dstucrypt/agent)
+[![codecov](https://codecov.io/gh/dstucrypt/agent/branch/master/graph/badge.svg)](https://codecov.io/gh/dstucrypt/agent)
+[![npm module](https://badge.fury.io/js/agent.svg)](https://www.npmjs.org/package/agent)
+[![dependencies](https://david-dm.org/dstucrypt/agent.png)](https://david-dm.org/dstucrypt/agent)
+
 # Usage
 
 ## Sign and encrypt file for tax office email gate.
