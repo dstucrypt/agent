@@ -6,8 +6,17 @@
   "scripts": {
     "shtest": "bash test/test.sh",
     "test": "mocha --reporter spec ./test/test*.js",
-    "cover": "npx istanbul cover ./node_modules/mocha/bin/_mocha --report lcovonly -- -R spec --timeout=10000",
+    "cover": "npx nyc mocha",
     "bundle": "webpack"
+  },
+  "nyc": {
+    "require": [
+      "@babel/register"
+    ],
+    "reporter": [
+      "lcov",
+      "text"
+    ]
   },
   "repository": {
     "type": "git",
@@ -25,8 +34,16 @@
   },
   "homepage": "https://github.com/dstucrypt/agent",
   "devDependencies": {
+    "@babel/cli": "^7.4.4",
+    "@babel/core": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "@babel/register": "^7.4.4",
+    "babel-plugin-istanbul": "^5.1.4",
+    "chai": "^4.2.0",
+    "cross-env": "^5.2.0",
     "istanbul": "^0.4.5",
     "mocha": "^6.1.4",
+    "nyc": "^14.1.0",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.2"
   },
