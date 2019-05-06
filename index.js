@@ -7,4 +7,4 @@ var argv = require('yargs')
     .argv;
 
 const agent = require('./agent');
-agent.run(argv);
+agent.main(argv);

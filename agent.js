@@ -43,7 +43,7 @@ var key_param_parse = function(key) {
     };
 };
 
-var get_box = function(key, cert) {
+async function get_local_box (key, cert) {
     var param = {algo: algos(), query: http.query};
     if (key) {
         key = key_param_parse(key);
@@ -56,9 +56,9 @@ var get_box = function(key, cert) {
     }
 
     return new Box(param);
-};
+}
 
-var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, done) {
+async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win) {
     var content = io.readFileSync(inputF);
 
     var cert_rcrypt, buf;
@@ -121,19 +121,17 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           tsp: tsp,
         });
     }
-    synctb = box.pipe(content, pipe, headers, function (tb) {
-        if (typeof outputF === 'string' && outputF !== '-') {
-            io.writeFileSync(outputF, tb);
-        } else {
-            io.stdout.write(tb);
-        }
-        box.sock && box.sock.destroy();
-        done && done();
-    });
-};
+    let tb = await box.pipe(content, pipe, headers);
+    if (typeof outputF === 'string' && outputF !== '-') {
+        io.writeFileSync(outputF, tb);
+    } else {
+        io.stdout.write(tb);
+    }
+    box.sock && box.sock.destroy();
+}
 
-var do_parse = function(inputF, outputF, box, done) {
-    var content, content2;
+async function do_parse(inputF, outputF, box) {
+    let content, content2;
     if (typeof inputF === 'string') {
         content = io.readFileSync(inputF);
     } else {
@@ -141,67 +139,60 @@ var do_parse = function(inputF, outputF, box, done) {
         content2 = io.readFileSync(inputF[1]);
     }
 
-    var winMap = function (header, key) {
-        header[key] = encoding.convert(header[key], 'utf8', 'cp1251').toString();
-    };
+    const textinfo = await box.unwrap(content, content2);
+    const rpipe = (textinfo.pipe || []);
 
-    var unwraped = function(textinfo, content) {
-        var rpipe = (textinfo.pipe || []);
-        var isWin = false;
-        var isErr = false;
-        rpipe.map(function (step) {
-            var x = step.cert;
-            var tr = (step.transport ? step.headers : {}) || {};
-            if (step.error) {
-                isErr = true;
-                error("Error occured during unwrap: " + step.error);
-                return;
-            }
-            if (tr.ENCODING === 'WIN') {
-                isWin = true;
-                Object.keys(tr).map(winMap.bind(null, tr));
-            }
-            if (tr.SUBJECT) {
-                error('Subject:', tr.SUBJECT);
-            }
-            if (tr.FILENAME) {
-                error("Filename:", tr.FILENAME);
-            }
-            if (tr.EDRPOU) {
-                error('Sent-By-EDRPOU:', tr.EDRPOU);
-            }
-            if (step.signed) {
-                error('Signed-By:', x.subject.commonName || x.subject.organizationName);
-                if (x.extension.ipn && x.extension.ipn.EDRPOU) {
-                    error('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
-                }
-            }
-            if (step.enc) {
-                error("Encrypted");
-            }
-        });
-        if (isErr === false) {
-            content = content || textinfo.content;
-            if (typeof outputF === 'string' && outputF !== '-') {
-                io.writeFileSync(outputF, content);
-            } else {
-                if (isWin) {
-                    content = encoding.convert(content, 'utf-8', 'cp1251');
-                }
-                io.stdout.write(content);
+    let isWin = false;
+    let isErr = false;
+    rpipe.forEach(function (step) {
+        const x = step.cert;
+        const tr = (step.transport ? step.headers : {}) || {};
+        if (step.error) {
+            isErr = true;
+            error("Error occured during unwrap: " + step.error);
+            return;
+        }
+        if (tr.ENCODING === 'WIN') {
+            isWin = true;
+            Object.keys(tr).forEach(key=> {
+              tr[key] = encoding.convert(tr[key], 'utf8', 'cp1251').toString();
+            });
+        }
+        if (tr.SUBJECT) {
+            error('Subject:', tr.SUBJECT);
+        }
+        if (tr.FILENAME) {
+            error("Filename:", tr.FILENAME);
+        }
+        if (tr.EDRPOU) {
+            error('Sent-By-EDRPOU:', tr.EDRPOU);
+        }
+        if (step.signed) {
+            error('Signed-By:', x.subject.commonName || x.subject.organizationName);
+            if (x.extension.ipn && x.extension.ipn.EDRPOU) {
+                error('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
             }
         }
-        if (box.sock) {
-            box.sock.destroy();
+        if (step.enc) {
+            error("Encrypted");
         }
-        done && done();
-    };
+    });
 
-    var syncinf = box.unwrap(content, content2, unwraped);
-    if (typeof syncinf === 'object') {
-        unwraped(syncinf);
+    if (isErr === false) {
+        let content = textinfo.content;
+        if (typeof outputF === 'string' && outputF !== '-') {
+            io.writeFileSync(outputF, content);
+        } else {
+            if (isWin) {
+                content = encoding.convert(content, 'utf-8', 'cp1251');
+            }
+            io.stdout.write(content);
+        }
     }
-};
+    if (box.sock) {
+        box.sock.destroy();
+    }
+}
 
 var unprotect = function(key, outputF) {
     key = key_param_parse(key);
@@ -221,34 +212,25 @@ var unprotect = function(key, outputF) {
 
 
 
-function run(argv, setIo, done) {
+async function main(argv, setIo) {
   setIo && Object.assign(io, setIo);
+
+  let box;
+  if(argv.connect) {
+      box = await new Promise(client.remoteBox);
+  } else {
+      box = await get_local_box(argv.key, argv.cert);
+  }
 
   if (argv.sign || argv.crypt) {
       if (argv.crypt === true && !argv.recipient_cert) {
-          error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
-          return done && done();
+          return error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
       }
-      var withBox = function(box) {
-          do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, argv.encode_win, done);
-      };
-      if(argv.connect) {
-          client.remoteBox(withBox);
-      } else {
-          withBox(get_box(argv.key, argv.cert));
-      }
+      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, argv.encode_win);
   }
 
   if (argv.decrypt) {
-      var withBoxDec = function(box) {
-          do_parse(argv.input, argv.output, box, done);
-      };
-
-      if(argv.connect) {
-          client.remoteBox(withBoxDec);
-      } else {
-          withBoxDec(get_box(argv.key, argv.cert));
-      }
+      await do_parse(argv.input, argv.output, box);
   }
 
   if (argv.unprotect) {
@@ -257,9 +239,9 @@ function run(argv, setIo, done) {
       }
   }
 
-  if (argv.agent) {
-      return daemon.start({box: get_box(argv.key, argv.cert), silent: argv.silent});
+  if (argv.agent && !argv.connect) {
+      return daemon.start({box, silent: argv.silent});
   }
 }
 
-module.exports = {run};
+module.exports = {main};
