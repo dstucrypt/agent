@@ -16,6 +16,7 @@ require('./rand-shim.js');
 const io = {
   stdout: process.stdout,
   readFileSync: fs.readFileSync,
+  writeFileSync: fs.writeFileSync,
 };
 
 function error(...all) {
