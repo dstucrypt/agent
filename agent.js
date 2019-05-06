@@ -1,14 +1,15 @@
-var daemon = require('./lib/frame/daemon.js'),
-    client = require('./lib/frame/client.js'),
-    http = require('./lib/http'),
-    fs = require('fs'),
-    encoding = require("encoding"),
-    gost89 = require('gost89'),
-    jk = require('jkurwa'),
-    algos = gost89.compat.algos,
-    Certificate = jk.models.Certificate,
-    Priv = jk.models.Priv,
-    Box = jk.Box;
+const daemon = require('./lib/frame/daemon.js');
+const client = require('./lib/frame/client.js');
+const http = require('./lib/http');
+const fs = require('fs');
+const encoding = require("encoding");
+const gost89 = require('gost89');
+const jk = require('jkurwa');
+
+const algos = gost89.compat.algos;
+const Certificate = jk.models.Certificate;
+const Priv = jk.models.Priv;
+const Box = jk.Box;
 
 require('./rand-shim.js');
 
@@ -26,13 +27,23 @@ function error(...all) {
   }
 }
 
-var date_str = function(d) {
+function output(filename, data, isWin) {
+  if (typeof filename === 'string' && filename !== '-') {
+    io.writeFileSync(filename, data);
+  } else {
+    io.stdout.write(
+      isWin ? encoding.convert(data, 'utf-8', 'cp1251') : data
+    );
+  }
+}
+
+function dateStr(d) {
     d = d || new Date();
     return d.toISOString().replace(/[\-T:Z.]/g, '').slice(0, 14);
-};
+}
 
-var key_param_parse = function(key) {
-    var pw;
+function key_param_parse (key) {
+    let pw;
     if (key.indexOf(':') !== -1) {
         pw = key.substr(key.indexOf(':') + 1);
         key = key.substr(0, key.indexOf(':'));
@@ -41,10 +52,10 @@ var key_param_parse = function(key) {
         path: key,
         pw: pw,
     };
-};
+}
 
 async function get_local_box (key, cert) {
-    var param = {algo: algos(), query: http.query};
+    const param = {algo: algos(), query: http.query};
     if (key) {
         key = key_param_parse(key);
         param.keys = param.keys || [{}];
@@ -59,19 +70,19 @@ async function get_local_box (key, cert) {
 }
 
 async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win) {
-    var content = io.readFileSync(inputF);
+    let content = io.readFileSync(inputF);
+    let cert_rcrypt;
 
-    var cert_rcrypt, buf;
     if (shouldCrypt) {
-        buf = fs.readFileSync(certRecF || shouldCrypt);
+        let buf = fs.readFileSync(certRecF || shouldCrypt);
         cert_rcrypt = Certificate.from_asn1(buf).as_pem();
         shouldCrypt = true;
     }
     
-    var ipn_ext = box.keys[0].cert.extension.ipn;
-    var subject = box.keys[0].cert.subject;
+    const ipn_ext = box.keys[0].cert.extension.ipn;
+    const subject = box.keys[0].cert.subject;
 
-    var headers;
+    let headers;
     if (email && tax) {
         if (filename === undefined) {
             filename = inputF.replace(/\\/g, '/').split('/');
@@ -82,7 +93,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
             RCV_NAME: encoding.convert(subject.organizationName, 'cp1251'),
             PRG_TYPE: "TRANSPORT GATE",
             PRG_VER: "1.0.0",
-            SND_DATE: date_str(),
+            SND_DATE: dateStr(),
             FILENAME: filename || inputF,
             EDRPOU: edrpou || ipn_ext.EDRPOU,
         };
@@ -95,7 +106,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
         }
     }
 
-    var pipe = [];
+    const pipe = [];
     if (shouldSign === true) {
         pipe.push({
           op: 'sign',
@@ -121,12 +132,8 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           tsp: tsp,
         });
     }
-    let tb = await box.pipe(content, pipe, headers);
-    if (typeof outputF === 'string' && outputF !== '-') {
-        io.writeFileSync(outputF, tb);
-    } else {
-        io.stdout.write(tb);
-    }
+    const tb = await box.pipe(content, pipe, headers);
+    output(outputF, tb);
     box.sock && box.sock.destroy();
 }
 
@@ -179,37 +186,24 @@ async function do_parse(inputF, outputF, box) {
     });
 
     if (isErr === false) {
-        let content = textinfo.content;
-        if (typeof outputF === 'string' && outputF !== '-') {
-            io.writeFileSync(outputF, content);
-        } else {
-            if (isWin) {
-                content = encoding.convert(content, 'utf-8', 'cp1251');
-            }
-            io.stdout.write(content);
-        }
+        output(outputF, textinfo.content, isWin);
     }
     if (box.sock) {
         box.sock.destroy();
     }
 }
 
-var unprotect = function(key, outputF) {
-    key = key_param_parse(key);
-    var buf = fs.readFileSync(key.path);
-    var store = Priv.from_protected(buf, key.pw, algos());
+function unprotect(key, outputF) {
+  key = key_param_parse(key);
+  const buf = fs.readFileSync(key.path);
+  const store = Priv.from_protected(buf, key.pw, algos());
 
-    if (!outputF) {
-        store.keys.map(function (key) {
-            console.log(key.as_pem());
-        });
-        return true;
+  store.keys.forEach(function (key) {
+    output(outputF, key.as_pem());
+  });
 
-    }
-    fs.writeFileSync(outputF, buf);
-    return true;
-};
-
+  return true;
+}
 
 
 async function main(argv, setIo) {
