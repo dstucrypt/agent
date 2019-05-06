@@ -81,7 +81,7 @@ var get_box = function(key, cert) {
     return new Box(param);
 };
 
-var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, done) {
+var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, done) {
     var content = io.readFileSync(inputF);
 
     var cert_rcrypt, buf;
@@ -111,6 +111,10 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
         };
         if (email) {
             headers.RCV_EMAIL = email;
+        }
+        if (encode_win) {
+            headers.ENCODING = 'WIN';
+            content = encoding.convert(content, 'cp1251');
         }
     }
 
@@ -142,7 +146,7 @@ var do_sc = function(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     }
     synctb = box.pipe(content, pipe, headers, function (tb) {
         if (typeof outputF === 'string' && outputF !== '-') {
-            fs.writeFileSync(outputF, tb);
+            io.writeFileSync(outputF, tb);
         } else {
             io.stdout.write(tb);
         }
@@ -249,7 +253,7 @@ function run(argv, setIo, done) {
           return done && done();
       }
       var withBox = function(box) {
-          do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, done);
+          do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, argv.encode_win, done);
       };
       if(argv.connect) {
           client.remoteBox(withBox);

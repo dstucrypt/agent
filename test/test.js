@@ -181,14 +181,128 @@ describe('Local Agent', ()=> {
         cert: asset('SELF_SIGNED1.cer'),
         input: io.asset('clear.txt', Buffer.from('This is me')),
         output: io.asset('signed.p7s'),
+        output: io.asset('signed.p7s', true),
       }, io);
+      const signed = io.readAsset('signed.p7s');
+      assert.equal(signed[0], 0x30);
 
       agent.run({
         decrypt: true,
-        input: io.asset('signed.p7s'),
+        input: io.asset('signed.p7s', signed),
       }, io);
       assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
       assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
+    });
+
+    it('check signature with transport container', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        tax: true,
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me')),
+        output: io.asset('signed.p7s', true),
+      }, io);
+
+      const signed = io.readAsset('signed.p7s');
+      assert.deepEqual(signed.slice(0, 9).toString(), 'UA1_SIGN\0');
+
+      agent.run({
+        decrypt: true,
+        input: io.asset('signed.p7s', signed),
+      }, io);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
+      assert.deepEqual(io.stderr.buffer, ['Signed-By:', 'Very Much CA']);
+    });
+
+    it('check signature with transport container including headers', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        tax: true,
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me')),
+        output: io.asset('signed.p7s', true),
+        email: 'username@email.example.com',
+        edrpou: '1234567891',
+      }, io);
+
+      const signed = io.readAsset('signed.p7s');
+      assert.deepEqual(signed.slice(0, 14).toString(), 'TRANSPORTABLE\0');
+
+      agent.run({
+        decrypt: true,
+        input: io.asset('signed.p7s', signed),
+      }, io);
+      assert.deepEqual(io.stderr.buffer, [
+        'Filename:', 'clear.txt',
+        'Sent-By-EDRPOU:', '1234567891',
+        'Signed-By:', 'Very Much CA'
+      ]);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me')]);
+    });
+
+    it('write signature to stdout and decode cp1251 is specified in headers', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        encode_win: true,
+        tax: true,
+        email: 'username@email.example.com',
+        edrpou: '1234567891',
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me. ЖчССТБ!')),
+        output: '-',
+      }, io);
+
+      const signed = Buffer.concat(io.stdout.buffer);
+      io.stdout.buffer = [];
+      agent.run({
+        decrypt: true,
+        input: io.asset('signed.p7s', signed),
+      }, io);
+      assert.deepEqual(io.stderr.buffer, [
+        'Filename:', 'clear.txt',
+        'Sent-By-EDRPOU:', '1234567891',
+        'Signed-By:', 'Very Much CA'
+      ]);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('This is me. ЖчССТБ!')]);
+    });
+
+    it('write signature to file without decoding content', ()=> {
+      const io = getIO();
+      agent.run({
+        sign: true,
+        encode_win: true,
+        tax: true,
+        email: 'username@email.example.com',
+        edrpou: '1234567891',
+        key: asset('PRIV1.cer'),
+        cert: asset('SELF_SIGNED1.cer'),
+        input: io.asset('clear.txt', Buffer.from('This is me. ЖчССТБ!')),
+        output: '-',
+      }, io);
+
+      const signed = Buffer.concat(io.stdout.buffer);
+      io.stdout.buffer = [];
+      agent.run({
+        decrypt: true,
+        input: io.asset('signed.p7s', signed),
+        output: io.asset('clear_out.txt', true),
+      }, io);
+      assert.deepEqual(io.stderr.buffer, [
+        'Filename:', 'clear.txt',
+        'Sent-By-EDRPOU:', '1234567891',
+        'Signed-By:', 'Very Much CA'
+      ]);
+      assert.deepEqual(io.stdout.buffer, []);
+      assert.deepEqual(
+        io.readAsset('clear_out.txt'),
+        Buffer.from('This is me. \xC6\xF7\xD1\xD1\xD2\xC1!', 'binary')
+      );
     });
 
     it('write signature to stdout', ()=> {
