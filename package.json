@@ -50,9 +50,9 @@
   "dependencies": {
     "codecov": "^3.1.0",
     "encoding": "^0.1.12",
-    "gost89": "latest",
+    "gost89": "^0.1.11",
     "jksreader": "^1.0.0",
-    "jkurwa": "^1.0.5",
+    "jkurwa": "^1.1.0",
     "yargs": "1.3.x"
   }
 }

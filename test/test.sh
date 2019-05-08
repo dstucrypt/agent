@@ -22,6 +22,10 @@ encrypt () {
   $AGENT --crypt $@
 }
 
+unprotect () {
+  $AGENT --unprotect $@
+}
+
 start_daemon() {
   cd "$DATA"
   [ -S "$HOME/.dstu-agent.sock" ] && return 1
@@ -38,6 +42,7 @@ stop_daemon() {
   then
     kill -15 $DAEMON
     rm -f "$HOME/.dstu-agent.sock"
+    DAEMON=""
   fi
 }
 
@@ -189,3 +194,19 @@ testcase \
   "decrypt --connect --input enc_message.p7"
 
 stop_daemon
+
+start_daemon --key STORE_A040.pem:password --cert SELF_SIGNED_ENC_40A0.cer --cert SELF_SIGNED_ENC_6929.cer
+
+testcase \
+  "Daemon decrypt message using password-protected key" \
+  <(echo -n 123) \
+  <(echo Encrypted) \
+  "decrypt --connect --input enc_message.p7"
+
+stop_daemon
+
+testcase \
+  "Unpack password-protected store" \
+  <(cat Key40A0.pem) \
+  <(true) \
+  "unprotect --key STORE_A040.pem:password"

@@ -209,6 +209,13 @@ function unprotect(key, outputF) {
 async function main(argv, setIo) {
   setIo && Object.assign(io, setIo);
 
+  if (argv.unprotect) {
+      if(!unprotect(argv.key, argv.output)) {
+          process.exit(1);
+      }
+      return;
+  }
+
   let box;
   if(argv.connect) {
       box = await new Promise(client.remoteBox);
@@ -227,11 +234,6 @@ async function main(argv, setIo) {
       await do_parse(argv.input, argv.output, box);
   }
 
-  if (argv.unprotect) {
-      if(!unprotect(argv.key, argv.output)) {
-          process.exit(1);
-      }
-  }
 
   if (argv.agent && !argv.connect) {
       return daemon.start({box, silent: argv.silent});

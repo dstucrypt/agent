@@ -431,6 +431,53 @@ describe('Local Agent', ()=> {
     });
 
   });
+
+  describe('Unprotect', ()=> {
+    it('Decrypt password-protected key and write raw key', async ()=> {
+      const io = getIO();
+      await agent.main({
+        unprotect: true,
+        key: asset('STORE_A040.pem:password'),
+        output: io.asset('Key.pem'),
+      }, io);
+
+      assert.deepEqual(io.stderr.buffer, []);
+      assert.deepEqual(io.stdout.buffer, []);
+      assert.deepEqual(
+        io.readAsset('Key.pem'),
+        fs.readFileSync(asset('Key40A0.pem')).toString(),
+      );
+    });
+
+    it('Decrypt password-protected key and output raw key', async ()=> {
+      const io = getIO();
+      await agent.main({
+        unprotect: true,
+        key: asset('STORE_A040.pem:password'),
+      }, io);
+
+      assert.deepEqual(io.stderr.buffer, []);
+      assert.deepEqual(
+        io.stdout.buffer,
+        [fs.readFileSync(asset('Key40A0.pem')).toString()]
+      );
+    });
+
+    it('output raw key in PEM', async ()=> {
+      const io = getIO();
+      await agent.main({
+        unprotect: true,
+        key: asset('Key40A0.cer'),
+      }, io);
+
+      assert.deepEqual(io.stderr.buffer, []);
+      assert.deepEqual(
+        io.stdout.buffer,
+        [fs.readFileSync(asset('Key40A0.pem')).toString()]
+      );
+    });
+  });
+
 });
 
 describe('Daemon Agent', ()=> {
@@ -447,6 +494,27 @@ describe('Daemon Agent', ()=> {
         agent: true,
         silent: true,
         key: asset('Key40A0.cer'),
+        cert: [
+          asset('SELF_SIGNED_ENC_40A0.cer'),
+        ],
+      });
+
+      await agent.main({
+        decrypt: true,
+        connect: true,
+        input: asset('enc_message.transport'),
+      }, io);
+
+      assert.deepEqual(io.stderr.buffer, ['Encrypted']);
+      assert.deepEqual(io.stdout.buffer, [Buffer.from('123')]);
+    });
+
+    it('Decrypt data using password-protected key', async ()=> {
+      const io = getIO();
+      stopDaemon = await agent.main({
+        agent: true,
+        silent: true,
+        key: asset('STORE_A040.pem:password'),
         cert: [
           asset('SELF_SIGNED_ENC_40A0.cer'),
         ],
