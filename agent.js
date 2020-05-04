@@ -11,8 +11,6 @@ const Certificate = jk.models.Certificate;
 const Priv = jk.models.Priv;
 const Box = jk.Box;
 
-require('./rand-shim.js');
-
 const io = {
   stdout: process.stdout,
   readFileSync: fs.readFileSync,

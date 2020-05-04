@@ -2,7 +2,7 @@
 
 set -e
 
-AGENT="node $(pwd)/index.js"
+AGENT="node --trace-deprecation $(pwd)/index.js"
 DATA=$(pwd)/node_modules/jkurwa/test/data
 FILTER="$1"
 
