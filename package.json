@@ -9,15 +9,6 @@
     "cover": "npm run test -- --coverage",
     "bundle": "webpack"
   },
-  "nyc": {
-    "require": [
-      "@babel/register"
-    ],
-    "reporter": [
-      "lcov",
-      "text"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git@github.com:dstucrypt/agent"
