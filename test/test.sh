@@ -15,11 +15,11 @@ unwrap () {
 }
 
 sign () {
-  $AGENT --sign $@
+  $AGENT --sign --time 1641111111 $@
 }
 
 encrypt () {
-  $AGENT --crypt $@
+  $AGENT --crypt $@ --time 1642222222
 }
 
 unprotect () {
@@ -114,7 +114,11 @@ testcase \
 testcase \
   "Unwrap signed message" \
   <(echo -n 123) \
-  <(echo Signed-By: Very Much CA) \
+  <(cat <<EOF
+Signed-By: Very Much CA
+Signature-Time: 1540236305
+EOF
+) \
   "unwrap --input message.p7"
 
 testcase \
@@ -123,6 +127,7 @@ testcase \
   <(cat <<EOF
 Sent-By-EDRPOU: 1234567891
 Signed-By: Very Much CA
+Signature-Time: 1540236305
 EOF
 ) \
   "unwrap --input message.transport"
@@ -138,7 +143,11 @@ sign \
 testcase \
   "Sign message and unwrap" \
   <(echo -n This is me) \
-  <(echo Signed-By: Very Much CA) \
+  <(cat <<EOF
+Signed-By: Very Much CA
+Signature-Time: 1641111111
+EOF
+) \
   "unwrap --input $TMPFILE"
 
 rm $TMPFILE
@@ -158,6 +167,7 @@ testcase \
   <(echo -n This was encrypted) \
   <(cat <<EOF
 Signed-By: Very Much CA
+Signature-Time: 1642222222
 Encrypted
 EOF
 ) \

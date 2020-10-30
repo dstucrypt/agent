@@ -61,13 +61,14 @@ async function get_local_box (key, cert) {
         param.keys[0].password = key.pw;
     }
     if (cert) {
+        param.keys = param.keys || [{}];
         param.keys[0].certPath = cert;
     }
 
     return new Box(param);
 }
 
-async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win) {
+async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, time) {
     let content = io.readFileSync(inputF);
     let cert_rcrypt;
 
@@ -112,6 +113,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           detached: Boolean(detached),
           role: role,
           tsp: tsp,
+          time: time,
         });
     }
     if (shouldCrypt === true) {
@@ -128,6 +130,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           detached: Boolean(detached),
           role: role,
           tsp: tsp,
+          time: time,
         });
     }
     const tb = await box.pipe(content, pipe, headers);
@@ -135,7 +138,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     box.sock && box.sock.destroy();
 }
 
-async function do_parse(inputF, outputF, box) {
+async function do_parse(inputF, outputF, box, tsp) {
     let content, content2;
     if (typeof inputF === 'string') {
         content = io.readFileSync(inputF);
@@ -144,7 +147,7 @@ async function do_parse(inputF, outputF, box) {
         content2 = io.readFileSync(inputF[1]);
     }
 
-    const textinfo = await box.unwrap(content, content2);
+    const textinfo = await box.unwrap(content, content2, {tsp});
     const rpipe = (textinfo.pipe || []);
 
     let isWin = false;
@@ -178,6 +181,16 @@ async function do_parse(inputF, outputF, box) {
                 error('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
             }
         }
+        if (step.contentTime) {
+            error('Content-Time-TSP:', step.contentTime / 1000);
+        }
+        if (step.tokenTime) {
+            error('Signature-Time-TSP:', step.tokenTime / 1000);
+        }
+        if (step.signingTime) {
+            error('Signature-Time:', step.signingTime/ 1000);
+        }
+
         if (step.enc) {
             error("Encrypted");
         }
@@ -225,11 +238,11 @@ async function main(argv, setIo) {
       if (argv.crypt === true && !argv.recipient_cert) {
           return error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
       }
-      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, argv.encode_win);
+      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, argv.encode_win, argv.time && Number(argv.time));
   }
 
   if (argv.decrypt) {
-      await do_parse(argv.input, argv.output, box);
+      await do_parse(argv.input, argv.output, box, argv.tsp);
   }
 
 

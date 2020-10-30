@@ -12,7 +12,7 @@
 Ready to send to tax office email gate. Would include data, signuture, transport headers with email to send response to among other things:
 
     node index.js --sign --crypt  otrimano.cer \
-                --tsp \
+                --tsp=all \
                 --key Key-6.dat:password \
                 --cert cert.sign.der --cert cert.cryp.der \
                 --input zvit.xml --output zvit.xml.sign.enc \
@@ -44,7 +44,7 @@ When `--no-tax` option is specified in command line, both transport header and `
                 --cert cert.sign.der \
                 --input text.pdf --output text.pdf.p7s \
                 --no-tax \
-                --tsp
+                --tsp=all
                 
 Example commandline for privatbank keys:
     
@@ -52,7 +52,7 @@ Example commandline for privatbank keys:
                 --key pb_1234567890.jks:password \
                 --input text.pdf --output text.pdf.p7s \
                 --no-tax \
-                --tsp
+                --tsp=all
     
 
 ## Write detached signature
@@ -113,6 +113,8 @@ To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. No
 ## TSP
 
 To add secure timestamp, use `--tsp` command-line switch. Secure timestamp is mandatory for long-term storage since November 7th 2018.
+When specified as `--tsp=all`, agent would include both content and signature timestamps. If specified when parsing the message, timestamps
+would be checked against document and TSP certificate and dates would be included in the output.
 
      node index.js --sign \
                 --tsp \
