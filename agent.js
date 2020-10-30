@@ -52,6 +52,13 @@ function key_param_parse (key) {
     };
 }
 
+function tsp_arg(value) {
+  if(value === true) {
+    return 'content';
+  }
+  return value;
+}
+
 async function get_local_box (key, cert) {
     const param = {algo: algos(), query: http.query};
     if (key) {
@@ -238,11 +245,11 @@ async function main(argv, setIo) {
       if (argv.crypt === true && !argv.recipient_cert) {
           return error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
       }
-      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, argv.tsp, argv.encode_win, argv.time && Number(argv.time));
+      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, tsp_arg(argv.tsp), argv.encode_win, argv.time && Number(argv.time));
   }
 
   if (argv.decrypt) {
-      await do_parse(argv.input, argv.output, box, argv.tsp);
+      await do_parse(argv.input, argv.output, box, tsp_arg(argv.tsp));
   }
 
 

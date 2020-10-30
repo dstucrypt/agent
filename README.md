@@ -113,6 +113,8 @@ To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. No
 ## TSP
 
 To add secure timestamp, use `--tsp` command-line switch. Secure timestamp is mandatory for long-term storage since November 7th 2018.
+Aceepts a value `--tsp signature` `--tsp=content` or `--tsp=all`. Options `--tsp` and `--tsp=content` are equivalent.
+
 When specified as `--tsp=all`, agent would include both content and signature timestamps. If specified when parsing the message, timestamps
 would be checked against document and TSP certificate and dates would be included in the output.
 
