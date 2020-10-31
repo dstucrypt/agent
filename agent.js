@@ -59,20 +59,29 @@ function tsp_arg(value) {
   return value;
 }
 
-async function get_local_box (key, cert) {
-    const param = {algo: algos(), query: http.query};
-    if (key) {
-        key = key_param_parse(key);
-        param.keys = param.keys || [{}];
-        param.keys[0].privPath = key.path;
-        param.keys[0].password = key.pw;
+function listOf(value) {
+    if(!value) {
+        return [];
     }
-    if (cert) {
-        param.keys = param.keys || [{}];
-        param.keys[0].certPath = cert;
+    if(Array.isArray(value)) {
+        return value;
+    }
+    return [value];
+}
+
+async function get_local_box (key, cert) {
+    const box = new Box({algo: algos(), query: http.query});
+    const keyInfo = listOf(key).map(key_param_parse);
+    for (let {path, pw} of keyInfo) {
+        let buf = fs.readFileSync(path);
+        box.load({keyBuffers: [buf], password: pw});
+    }
+    for (let path of listOf(cert) ) {
+        let buf = fs.readFileSync(path);
+        box.load({certPem: buf});
     }
 
-    return new Box(param);
+    return box;
 }
 
 async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, time) {
