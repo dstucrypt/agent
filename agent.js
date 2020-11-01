@@ -69,7 +69,7 @@ function listOf(value) {
     return [value];
 }
 
-async function get_local_box (key, cert) {
+async function get_local_box (key, cert, ca) {
     const box = new Box({algo: algos(), query: http.query});
     const keyInfo = listOf(key).map(key_param_parse);
     for (let {path, pw} of keyInfo) {
@@ -79,6 +79,10 @@ async function get_local_box (key, cert) {
     for (let path of listOf(cert) ) {
         let buf = fs.readFileSync(path);
         box.load({certPem: buf});
+    }
+    if(ca) {
+        let buf = fs.readFileSync(ca);
+        box.loadCAs(buf);
     }
 
     return box;
@@ -247,7 +251,7 @@ async function main(argv, setIo) {
   if(argv.connect) {
       box = await new Promise(client.remoteBox);
   } else {
-      box = await get_local_box(argv.key, argv.cert);
+      box = await get_local_box(argv.key, argv.cert, argv.ca_path);
   }
 
   if (argv.sign || argv.crypt) {
