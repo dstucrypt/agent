@@ -161,6 +161,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: asset("message.p7"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -173,6 +174,28 @@ describe("Local Agent", () => {
       ]);
     });
 
+    it("check signature and complain about unathenticated signed", async () => {
+      const io = getIO();
+      await agent.main(
+        {
+          decrypt: true,
+          input: asset("message.p7"),
+        },
+        io
+      );
+      assert.deepEqual(io.stdout.buffer, [Buffer.from("123")]);
+      assert.deepEqual(io.stderr.buffer, [
+        "Signed-By:",
+        "Very Much CA",
+        "Signer-Authentity:",
+        "Not-Verified",
+        "Signer-Authentity-Reason:",
+        "No CA list supplied",
+        "Signature-Time:",
+        "1540236305",
+      ]);
+    });
+
     it("check signature and write cleatext to file", async () => {
       const io = getIO();
       await agent.main(
@@ -180,6 +203,7 @@ describe("Local Agent", () => {
           decrypt: true,
           input: asset("message.p7"),
           output: io.asset("clear.txt"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -201,6 +225,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: asset("message.transport"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -237,6 +262,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: io.asset("signed.p7s"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -270,6 +296,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: io.asset("signed.p7s"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -305,6 +332,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: io.asset("signed.p7s"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -344,6 +372,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: io.asset("signed.p7s", signed),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -384,6 +413,7 @@ describe("Local Agent", () => {
           decrypt: true,
           input: io.asset("signed.p7s", signed),
           output: io.asset("clear_out.txt"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -423,6 +453,7 @@ describe("Local Agent", () => {
         {
           decrypt: true,
           input: io.asset("signed.p7s", signed),
+          ca_path: asset("CAList.cer"),
         },
         io
       );
@@ -487,6 +518,7 @@ describe("Local Agent", () => {
             io.asset("signed.p7s", signed),
             io.asset("clear.txt", Buffer.from("This is me")),
           ],
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -521,6 +553,7 @@ describe("Local Agent", () => {
           input: io.asset("encrypted.p7s"),
           key: asset("Key40A0.cer"),
           cert: asset("SELF_SIGNED_ENC_40A0.cer"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -556,6 +589,7 @@ describe("Local Agent", () => {
           input: io.asset("encrypted.p7s"),
           key: asset("Key40A0.cer"),
           cert: asset("SELF_SIGNED_ENC_40A0.cer"),
+          ca_path: asset("CAList.cer")
         },
         io
       );
@@ -564,7 +598,6 @@ describe("Local Agent", () => {
         "Very Much CA",
         "Signature-Time:",
         "1600000000",
-
         "Encrypted",
       ]);
       assert.deepEqual(io.stdout.buffer, [Buffer.from("This was encrypted")]);
@@ -722,6 +755,7 @@ describe("Daemon Agent", () => {
         silent: true,
         key: asset("Key40A0.cer"),
         cert: asset("SELF_SIGNED_ENC_40A0.cer"),
+        ca_path: asset("CAList.cer")
       });
       await agent.main(
         {
@@ -749,6 +783,7 @@ describe("Daemon Agent", () => {
         silent: true,
         key: asset("PRIV1.cer"),
         cert: asset("SELF_SIGNED1.cer"),
+        ca_path: asset("CAList.cer")
       });
 
       const io = getIO();

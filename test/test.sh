@@ -11,6 +11,10 @@ decrypt () {
 }
 
 unwrap () {
+  $AGENT --decrypt --ca_path CAList.cer $@
+}
+
+unwrap_noca () {
   $AGENT --decrypt $@
 }
 
@@ -120,6 +124,18 @@ Signature-Time: 1540236305
 EOF
 ) \
   "unwrap --input message.p7"
+
+testcase \
+  "Unwrap signed message but complain about unknown cert" \
+  <(echo -n 123) \
+  <(cat <<EOF
+Signed-By: Very Much CA
+Signer-Authentity: Not-Verified
+Signer-Authentity-Reason: No CA list supplied
+Signature-Time: 1540236305
+EOF
+) \
+  "unwrap_noca --input message.p7"
 
 testcase \
   "Unwrap signed transport message" \
