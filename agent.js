@@ -201,6 +201,10 @@ async function do_parse(inputF, outputF, box, tsp) {
                 error('Signed-By-EDRPOU:', x.extension.ipn.EDRPOU);
             }
         }
+        if (step.signed && !step.cert.verified) {
+            error('Signer-Authentity:', 'Not-Verified');
+            error('Signer-Authentity-Reason:', 'No CA list supplied');
+        }
         if (step.contentTime) {
             error('Content-Time-TSP:', step.contentTime / 1000);
         }
