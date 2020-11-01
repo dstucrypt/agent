@@ -158,7 +158,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     box.sock && box.sock.destroy();
 }
 
-async function do_parse(inputF, outputF, box, tsp) {
+async function do_parse(inputF, outputF, box, tsp, ocsp) {
     let content, content2;
     if (typeof inputF === 'string') {
         content = io.readFileSync(inputF);
@@ -167,7 +167,7 @@ async function do_parse(inputF, outputF, box, tsp) {
         content2 = io.readFileSync(inputF[1]);
     }
 
-    const textinfo = await box.unwrap(content, content2, {tsp});
+    const textinfo = await box.unwrap(content, content2, {tsp, ocsp});
     const rpipe = (textinfo.pipe || []);
 
     let isWin = false;
@@ -204,6 +204,14 @@ async function do_parse(inputF, outputF, box, tsp) {
         if (step.signed && !step.cert.verified) {
             error('Signer-Authentity:', 'Not-Verified');
             error('Signer-Authentity-Reason:', 'No CA list supplied');
+        }
+        if (step.ocsp) {
+          for(let ocsp of step.ocsp) {
+            error('OCSP-Check:', ocsp.statusOk ? 'OK' : ocsp.requestOk ? 'Fail' : 'Unknown');
+            if(ocsp.hasOwnProperty('time')) {
+              error('OCSP-Check-Time:', ocsp.time);
+            }
+          }
         }
         if (step.contentTime) {
             error('Content-Time-TSP:', step.contentTime / 1000);
@@ -266,7 +274,7 @@ async function main(argv, setIo) {
   }
 
   if (argv.decrypt) {
-      await do_parse(argv.input, argv.output, box, tsp_arg(argv.tsp));
+      await do_parse(argv.input, argv.output, box, tsp_arg(argv.tsp), argv.ocsp);
   }
 
 

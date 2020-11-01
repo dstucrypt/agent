@@ -40,7 +40,7 @@
     "encoding": "^0.1.12",
     "gost89": "^0.1.11",
     "jksreader": "^1.0.0",
-    "jkurwa": "github:dstucrypt/jkurwa#v1.6.0",
+    "jkurwa": "github:dstucrypt/jkurwa#v1.7.0",
     "yargs": "1.3.x"
   }
 }

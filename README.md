@@ -110,6 +110,7 @@ To unwrap and decrypt incoming messages, use `--decrypt` command-line switch. No
                 --input incoming.encrypted \
                 --output clear \
                 --tsp all \
+                --ocsp strict \
                 --ca_path CACertificates.p7b
 
 ## TSP
@@ -121,7 +122,7 @@ When specified as `--tsp all`, agent would include both content and signature ti
 would be checked against document and TSP certificate and dates would be included in the output.
 
      node index.js --sign \
-                --tsp \
+                --tsp signature \
                 --key Key-6.raw \
                 --cert cert.sign.der \
                 --input zvit.xml --output zvit.xml.sign
@@ -132,6 +133,12 @@ would be checked against document and TSP certificate and dates would be include
 List of certificate authorities is only used as a list of preloaded certificates, mainly for TSP verification. Get one from `https://id.gov.ua/verify-widget/v20200922/Data/CACertificates.p7b` (or older version).
 
 Note: for some unknown reason, id.gov.ua rejectes download requests made with Wget user agent. Setting empty user agent works just fine: `wget -O - 'https://id.gov.ua/verify-widget/v20200922/Data/CACertificates.p7b' --header='User-Agent: '`
+
+If CA list is supplied, all signed messages are verified against CA list and failures would result in unwrap error
+
+## OCSP
+
+When CA list is supplied it's also possible to verify signer certificate validity through OCSP. OCSP cmdline argument could be either unspecified `--ocsp`, `--ocsp strict` or `--ocsp lax`. In strict mode, all OCSP failures, even transient ones, would result in unwrap error. Argument specified without value defaults to `srict`. In lax mode network errors (including mailformed and tampered responses) would be reported but would not result in unwrap error.
 
 ## Agent mode
 
