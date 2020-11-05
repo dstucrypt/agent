@@ -279,7 +279,7 @@ async function main(argv, setIo) {
 
 
   if (argv.agent && !argv.connect) {
-      return daemon.start({box, silent: argv.silent});
+      return daemon.start({box, silent: argv.silent, bind: argv.bind, tcp: argv.tcp});
   }
 }
 
