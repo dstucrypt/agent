@@ -1,5 +1,6 @@
 const daemon = require('./lib/frame/daemon.js');
 const client = require('./lib/frame/client.js');
+const proxy = require('./lib/frame/proxy.js');
 const http = require('./lib/http');
 const fs = require('fs');
 const encoding = require("encoding");
@@ -280,6 +281,10 @@ async function main(argv, setIo) {
 
   if (argv.agent && !argv.connect) {
       return daemon.start({box, silent: argv.silent, bind: argv.bind, tcp: argv.tcp, ca: argv.ca_path, key: argv.connect_key});
+  }
+
+  if(argv.proxy) {
+      return proxy.start({silent: argv.silent, bind: argv.bind, key: argv.connect_key, ports: argv.ports});
   }
 }
 
