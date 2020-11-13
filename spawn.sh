@@ -23,7 +23,7 @@ if [ -z "$key" ] ; then
 fi
 for port in $(seq -w $low_port $high_port)
 do
-  respawn node index.js --agent  --tcp --bind :$port  --connect_key $key  & # --ca_path CACertificates.p7b 
+  respawn node index.js --agent --only_known --tcp --bind :$port  --connect_key $key  & # --ca_path CACertificates.p7b 
   process="$process $!"
 done
 
