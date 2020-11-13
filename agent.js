@@ -253,6 +253,8 @@ function unprotect(key, outputF) {
 async function main(argv, setIo) {
   setIo && Object.assign(io, setIo);
 
+  jk.Curve.only_known = argv.only_known;
+
   if (argv.unprotect) {
       if(!unprotect(argv.key, argv.output)) {
           process.exit(1);
