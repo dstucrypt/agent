@@ -1,3 +1,5 @@
+#!/bin/bash
+
 control_port=3100
 low_port=3101
 high_port=3104
@@ -23,7 +25,7 @@ if [ -z "$key" ] ; then
 fi
 for port in $(seq -w $low_port $high_port)
 do
-  respawn node index.js --agent --only_known --tcp --bind :$port  --connect_key $key  & # --ca_path CACertificates.p7b 
+  respawn taskset --cpu-list $[ $port - $low_port ] node index.js --agent  --tcp --bind :$port  --connect_key $key   --only_known --ca_path CACertificates.p7b &
   process="$process $!"
 done
 
