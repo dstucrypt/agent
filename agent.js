@@ -280,7 +280,7 @@ async function main(argv, setIo) {
 
 
   if (argv.agent && !argv.connect) {
-      return daemon.start({box, silent: argv.silent, bind: argv.bind, tcp: argv.tcp, ca: argv.ca_path, key: argv.connect_key});
+      return daemon.start({box, silent: argv.silent, bind: argv.bind, tcp: argv.tcp, ca: argv.ca_path, key: argv.connect_key, keep_alive: argv.keep_alive});
   }
 
   if(argv.proxy) {
