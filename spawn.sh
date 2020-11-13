@@ -17,6 +17,10 @@ stop() {
 
 key=$1
 process=""
+if [ -z "$key" ] ; then
+  echo "No key given" >> /dev/stderr
+  exit 1;
+fi
 for port in $(seq -w $low_port $high_port)
 do
   respawn node index.js --agent  --tcp --bind :$port  --connect_key $key  & # --ca_path CACertificates.p7b 
