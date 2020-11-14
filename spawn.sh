@@ -31,7 +31,7 @@ for x in $(seq 1 $num)
 do
   cpu=$[ $x - 1 ]
   port=$[ $control_port + $x ]
-  respawn taskset --cpu-list $cpu node index.js --agent  --tcp --bind :$port  --connect_key $key   --only_known & #--ca_path CACertificates.p7b &
+  respawn taskset --cpu-list $cpu node index.js --agent  --tcp --bind :$port  --connect_key $key  --only_known --ca_path CACertificates.p7b &
   process="$process $!"
 done
 
