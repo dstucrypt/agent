@@ -4,6 +4,7 @@ const http = require('./lib/http');
 const fs = require('fs');
 const encoding = require("encoding");
 const gost89 = require('gost89');
+const dstu7564 = require('em-dstu7564');
 const jk = require('jkurwa');
 
 const algos = gost89.compat.algos;
@@ -70,7 +71,15 @@ function listOf(value) {
 }
 
 async function get_local_box (key, cert, ca) {
-    const box = new Box({algo: algos(), query: http.query});
+    const algo = {
+      ...algos(),
+      hashes: {
+        'Gost34311': gost89.gosthash,
+        'Dstu7564-256': dstu7564.computeHash,
+      }
+    };
+    algo.hash.algo = 'gost';
+    const box = new Box({algo, query: http.query});
     const keyInfo = listOf(key).map(key_param_parse);
     for (let {path, pw} of keyInfo) {
         let buf = fs.readFileSync(path);
@@ -88,7 +97,7 @@ async function get_local_box (key, cert, ca) {
     return box;
 }
 
-async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, time) {
+async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, time, hashAlgo) {
     let content = io.readFileSync(inputF);
     let cert_rcrypt;
 
@@ -126,6 +135,11 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     }
 
     const pipe = [];
+    const hash = {
+      'dstu': 'Dstu7564-256',
+      'kupyna': 'Dstu7564-256',
+      'gost': 'Gost34311',
+    }[hashAlgo] || 'Gost34311';
     if (shouldSign === true) {
         pipe.push({
           op: 'sign',
@@ -134,6 +148,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           role: role,
           tsp: tsp,
           time: time,
+          hash,
         });
     }
     if (shouldCrypt === true) {
@@ -151,6 +166,7 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
           role: role,
           tsp: tsp,
           time: time,
+          hash,
         });
     }
     const tb = await box.pipe(content, pipe, headers);
@@ -250,6 +266,7 @@ function unprotect(key, outputF) {
 
 
 async function main(argv, setIo) {
+  await dstu7564.ready();
   setIo && Object.assign(io, setIo);
 
   if (argv.unprotect) {
@@ -270,7 +287,7 @@ async function main(argv, setIo) {
       if (argv.crypt === true && !argv.recipient_cert) {
           return error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
       }
-      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, tsp_arg(argv.tsp), argv.encode_win, argv.time && Number(argv.time));
+      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, tsp_arg(argv.tsp), argv.encode_win, argv.time && Number(argv.time), argv.hash);
   }
 
   if (argv.decrypt) {

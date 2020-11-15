@@ -37,10 +37,11 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "em-dstu7564": "^1.0.1",
     "encoding": "^0.1.12",
     "gost89": "^0.1.11",
     "jksreader": "^1.0.0",
-    "jkurwa": "^1.7.2",
+    "jkurwa": "github:dstucrypt/jkurwa#kupyna-dstu7564",
     "yargs": "1.3.x"
   }
 }
