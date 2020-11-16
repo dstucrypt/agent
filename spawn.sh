@@ -27,9 +27,10 @@ if [ -z "$key" ] ; then
   exit 1;
 fi
 
+limit=$(cat /proc/cpuinfo  | grep -E '^processor' | wc -l)
 for x in $(seq 1 $num)
 do
-  cpu=$[ $x - 1 ]
+  cpu=$[ ($x - 1) % $limit ]
   port=$[ $control_port + $x ]
   respawn taskset --cpu-list $cpu node index.js --agent  --tcp --bind :$port  --connect_key $key  --only_known --ca_path CACertificates.p7b &
   process="$process $!"
