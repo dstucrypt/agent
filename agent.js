@@ -4,7 +4,7 @@ const http = require('./lib/http');
 const fs = require('fs');
 const encoding = require("encoding");
 const gost89 = require('gost89');
-const dstu7564 = require('em-dstu7564');
+const dstu7564 = require('dstu7564');
 const jk = require('jkurwa');
 
 const algos = gost89.compat.algos;
@@ -75,7 +75,7 @@ async function get_local_box (key, cert, ca) {
       ...algos(),
       hashes: {
         'Gost34311': gost89.gosthash,
-        'Dstu7564-256': dstu7564.computeHash,
+        'Dstu7564-256': dstu7564.computeHash.bind(null, 32),
       }
     };
     algo.hash.algo = 'gost';
@@ -266,7 +266,6 @@ function unprotect(key, outputF) {
 
 
 async function main(argv, setIo) {
-  await dstu7564.ready();
   setIo && Object.assign(io, setIo);
 
   if (argv.unprotect) {
