@@ -36,7 +36,7 @@ do
   process="$process $!"
 done
 
-respawn node index.js --proxy  --bind :$control_port --ports $[ $control_port + 1 ]:$[ $control_port + $num ] --connect_key bdc7b38e820bd95d5a42bd3566638479332b6704332573af05ff931a1cdbda07  &
+respawn node index.js --proxy  --bind :$control_port --ports $[ $control_port + 1 ]:$[ $control_port + $num ] --connect_key $key  &
 process="$process $!"
 
 
