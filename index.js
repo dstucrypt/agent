@@ -7,4 +7,8 @@ var argv = require('yargs')
     .argv;
 
 const agent = require('./agent');
-agent.main(argv);
+agent.main(argv)
+  .catch(()=> {
+    console.error('Internal error');
+    process.exit(1);
+  });
