@@ -8,7 +8,19 @@ var argv = require('yargs')
 
 const agent = require('./agent');
 agent.main(argv)
-  .catch(()=> {
-    console.error('Internal error');
+  .then((result)=> {
+    // daemon was started and is still running
+    if(typeof result === 'function') {
+      return null;
+    }
+    process.exit(result ? 0 : 1)
+  })
+  .catch((error)=> {
+    if(!(error instanceof agent.ReadFileError)) {
+      console.error('Internal error');
+    }
+    if(argv.debug) {
+      console.error('Details', error);
+    }
     process.exit(1);
   });

@@ -25,6 +25,21 @@ function error(...all) {
   }
 }
 
+class ReadFileError extends Error {};
+
+function readFile(filename) {
+  return new Promise((resolve, reject)=> {
+    fs.readFile(filename, (err, data)=> {
+      if(err) {
+        console.error('read file', err.toString());
+        reject(new ReadFileError());
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
 function output(filename, data, isWin) {
   if (typeof filename === 'string' && filename !== '-') {
     io.writeFileSync(filename, data);
@@ -73,15 +88,15 @@ async function get_local_box (key, cert, ca) {
     const box = new Box({algo: algos(), query: http.query});
     const keyInfo = listOf(key).map(key_param_parse);
     for (let {path, pw} of keyInfo) {
-        let buf = fs.readFileSync(path);
+        let buf = await readFile(path);
         box.load({keyBuffers: [buf], password: pw});
     }
     for (let path of listOf(cert) ) {
-        let buf = fs.readFileSync(path);
+        let buf = await readFile(path);
         box.load({certPem: buf});
     }
-    if(ca) {
-        let buf = fs.readFileSync(ca);
+    if (ca) {
+        let buf = await readFile(ca);
         box.loadCAs(buf);
     }
 
@@ -89,11 +104,11 @@ async function get_local_box (key, cert, ca) {
 }
 
 async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, edrpou, email, filename, tax, detached, role, tsp, encode_win, time) {
-    let content = io.readFileSync(inputF);
+    let content = await readFile(inputF);
     let cert_rcrypt;
 
     if (shouldCrypt) {
-        let buf = fs.readFileSync(certRecF || shouldCrypt);
+        let buf = await readFile(certRecF || shouldCrypt);
         cert_rcrypt = Certificate.from_asn1(buf).as_pem();
         shouldCrypt = true;
     }
@@ -155,16 +170,16 @@ async function do_sc(shouldSign, shouldCrypt, box, inputF, outputF, certRecF, ed
     }
     const tb = await box.pipe(content, pipe, headers);
     output(outputF, tb);
-    box.sock && box.sock.destroy();
+    return true;
 }
 
 async function do_parse(inputF, outputF, box, tsp, ocsp) {
     let content, content2;
     if (typeof inputF === 'string') {
-        content = io.readFileSync(inputF);
-    } else {
-        content = io.readFileSync(inputF[0]);
-        content2 = io.readFileSync(inputF[1]);
+        content = await readFile(inputF);
+    } else if(inputF.length === 2) {
+        content = await readFile(inputF[0]);
+        content2 = await readFile(inputF[1]);
     }
 
     const textinfo = await box.unwrap(content, content2, {tsp, ocsp});
@@ -231,9 +246,8 @@ async function do_parse(inputF, outputF, box, tsp, ocsp) {
     if (isErr === false) {
         output(outputF, textinfo.content, isWin);
     }
-    if (box.sock) {
-        box.sock.destroy();
-    }
+    
+    return true;
 }
 
 function unprotect(key, outputF) {
@@ -250,13 +264,11 @@ function unprotect(key, outputF) {
 
 
 async function main(argv, setIo) {
+  let ret = false;
   setIo && Object.assign(io, setIo);
 
   if (argv.unprotect) {
-      if(!unprotect(argv.key, argv.output)) {
-          process.exit(1);
-      }
-      return;
+      return unprotect(argv.key, argv.output);
   }
 
   let box;
@@ -270,17 +282,23 @@ async function main(argv, setIo) {
       if (argv.crypt === true && !argv.recipient_cert) {
           return error('Please specify recipient certificate for encryption mode: --crypt filename.cert');
       }
-      await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, tsp_arg(argv.tsp), argv.encode_win, argv.time && Number(argv.time));
+      ret = await do_sc(argv.sign, argv.crypt, box, argv.input, argv.output, argv.recipient_cert, argv.edrpou, argv.email, argv.filename, argv.tax, argv.detached, argv.role, tsp_arg(argv.tsp), argv.encode_win, argv.time && Number(argv.time));
   }
 
   if (argv.decrypt) {
-      await do_parse(argv.input, argv.output, box, tsp_arg(argv.tsp), argv.ocsp);
+      ret = await do_parse(argv.input, argv.output, box, tsp_arg(argv.tsp), argv.ocsp);
   }
 
 
   if (argv.agent && !argv.connect) {
       return daemon.start({box, silent: argv.silent});
   }
+
+  if (box && box.sock) {
+      box.sock.destroy();
+  }
+
+  return ret;
 }
 
-module.exports = {main};
+module.exports = {main, ReadFileError};
