@@ -31,7 +31,7 @@ function readFile(filename) {
   return new Promise((resolve, reject) => {
     fs.readFile(filename, (err, data) => {
       if (err) {
-        console.error("read file", err.toString());
+        error("read file", err.toString());
         reject(new ReadFileError());
       } else {
         resolve(data);
@@ -186,6 +186,10 @@ async function do_sc(
     });
   }
   const tb = await box.pipe(content, pipe, headers);
+  if(tb.error) {
+    error("Error occured inside the pipeline.");
+    return false;
+  }
   output(outputF, tb);
   return true;
 }
