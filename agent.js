@@ -248,7 +248,8 @@ async function do_parse(inputF, outputF, box, tsp, ocsp) {
       for (let ocsp of step.ocsp) {
         error(
           "OCSP-Check:",
-          ocsp.statusOk ? "OK" : ocsp.requestOk ? "Fail" : "Unknown"
+          ocsp.statusOk ? "OK" : ocsp.requestOk ? "Fail" : "Unknown",
+          ocsp.isOcspStamp ? 'Stamp' : 'Online'
         );
         if (ocsp.hasOwnProperty("time")) {
           error("OCSP-Check-Time:", ocsp.time);
