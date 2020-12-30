@@ -118,6 +118,7 @@ async function do_sc(
   detached,
   role,
   tsp,
+  ocsp,
   encode_win,
   time
 ) {
@@ -165,6 +166,7 @@ async function do_sc(
       detached: Boolean(detached),
       role: role,
       tsp: tsp,
+      ocsp: ocsp,
       time: time,
     });
   }
@@ -182,6 +184,7 @@ async function do_sc(
       detached: Boolean(detached),
       role: role,
       tsp: tsp,
+      ocsp: ocsp,
       time: time,
     });
   }
@@ -321,6 +324,7 @@ async function main(argv, setIo) {
       argv.detached,
       argv.role,
       tsp_arg(argv.tsp),
+      argv.ocsp,
       argv.encode_win,
       argv.time && Number(argv.time)
     );
