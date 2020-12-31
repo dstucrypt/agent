@@ -142,6 +142,10 @@ When CA list is supplied it's also possible to verify signer certificate validit
 
 Specifying `--ocsp` when signing would add full OCSP responses to the message (cades X-long).
 
+## Certificate refs and values
+
+To include references (cades-c) or full copies (cades-x-long) of CA certificates used to produce the signature, pass `--include_chain ref` or `--include_chain full` to the command line.
+
 ## Agent mode
 
 Signer can operate as out-of-process agent. One process would load key storage and listen to local socket,

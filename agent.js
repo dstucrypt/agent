@@ -119,6 +119,7 @@ async function do_sc(
   role,
   tsp,
   ocsp,
+  includeChain,
   encode_win,
   time
 ) {
@@ -167,6 +168,7 @@ async function do_sc(
       role: role,
       tsp: tsp,
       ocsp: ocsp,
+      includeChain: includeChain,
       time: time,
     });
   }
@@ -185,6 +187,7 @@ async function do_sc(
       role: role,
       tsp: tsp,
       ocsp: ocsp,
+      includeChain: includeChain,
       time: time,
     });
   }
@@ -326,6 +329,7 @@ async function main(argv, setIo) {
       argv.role,
       tsp_arg(argv.tsp),
       argv.ocsp,
+      argv.include_chain,
       argv.encode_win,
       argv.time && Number(argv.time)
     );
