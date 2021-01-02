@@ -16,7 +16,11 @@ agent
     process.exit(result ? 0 : 1);
   })
   .catch((error) => {
-    if (!(error instanceof agent.ReadFileError)) {
+    if(error.constructor.name === 'ENOKEY') {
+      console.error(error.message);
+      console.error("Try adding --role personal or --role stampt to you commandline");
+    }
+    else if (!(error instanceof agent.ReadFileError)) {
       console.error("Internal error");
     }
     if (argv.debug) {
