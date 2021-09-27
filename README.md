@@ -140,6 +140,14 @@ If CA list is supplied, all signed messages are verified against CA list and fai
 
 When CA list is supplied it's also possible to verify signer certificate validity through OCSP. OCSP cmdline argument could be either unspecified `--ocsp`, `--ocsp strict` or `--ocsp lax`. In strict mode, all OCSP failures, even transient ones, would result in unwrap error. Argument specified without value defaults to `srict`. In lax mode network errors (including mailformed and tampered responses) would be reported but would not result in unwrap error.
 
+Specifying `--ocsp` when signing would add full OCSP responses to the message (cades X-long).
+
+Note: czo/verify would still issue ocsp request to check validity of tsp certificate despite ocsp stamp being present in the file.
+
+## Certificate refs and values
+
+To include references (cades-c) or full copies (cades-x-long) of CA certificates used to produce the signature, pass `--include_chain ref` or `--include_chain full` to the command line.
+
 ## Agent mode
 
 Signer can operate as out-of-process agent. One process would load key storage and listen to local socket,
