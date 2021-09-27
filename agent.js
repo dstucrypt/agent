@@ -193,7 +193,7 @@ async function do_sc(
     });
   }
   const tb = await box.pipe(content, pipe, headers);
-  if(tb.error) {
+  if (tb.error) {
     error("Error occured inside the pipeline.");
     return false;
   }
@@ -253,7 +253,7 @@ async function do_parse(inputF, outputF, box, tsp, ocsp) {
         error(
           "OCSP-Check:",
           ocsp.statusOk ? "OK" : ocsp.requestOk ? "Fail" : "Unknown",
-          ocsp.isOcspStamp ? 'Stamp' : 'Online'
+          ocsp.isOcspStamp ? "Stamp" : "Online"
         );
         if (ocsp.hasOwnProperty("time")) {
           error("OCSP-Check-Time:", ocsp.time);
@@ -349,11 +349,24 @@ async function main(argv, setIo) {
   }
 
   if (argv.agent && !argv.connect) {
-      return daemon.start({box, silent: argv.silent, bind: argv.bind, tcp: argv.tcp, ca: argv.ca_path, key: argv.connect_key, keep_alive: argv.keep_alive});
+    return daemon.start({
+      box,
+      silent: argv.silent,
+      bind: argv.bind,
+      tcp: argv.tcp,
+      ca: argv.ca_path,
+      key: argv.connect_key,
+      keep_alive: argv.keep_alive,
+    });
   }
 
   if (argv.proxy) {
-      return proxy.start({silent: argv.silent, bind: argv.bind, key: argv.connect_key, ports: argv.ports});
+    return proxy.start({
+      silent: argv.silent,
+      bind: argv.bind,
+      key: argv.connect_key,
+      ports: argv.ports,
+    });
   }
 
   if (box && box.sock) {
