@@ -41,8 +41,19 @@ function readFile(filename) {
   });
 }
 
-function output(filename, data, isWin) {
-  if (typeof filename === "string" && filename !== "-") {
+async function output(filename, data, isWin, uploadUrl) {
+  if (uploadUrl) {
+    const headers = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    const uploadData = JSON.stringify([{
+      fname: filename,
+      contentBase64: data.toString('base64'),
+    }]);
+    const ret = await http.query_promise('POST', uploadUrl, headers, uploadData);
+    console.log(ret.toString());
+  } else if (typeof filename === "string" && filename !== "-") {
     io.writeFileSync(filename, data);
   } else {
     io.stdout.write(isWin ? encoding.convert(data, "utf-8", "cp1251") : data);
@@ -111,6 +122,7 @@ async function do_sc(
   box,
   inputF,
   outputF,
+  uploadUrl,
   certRecF,
   edrpou,
   email,
@@ -197,7 +209,7 @@ async function do_sc(
     error("Error occured inside the pipeline.");
     return false;
   }
-  output(outputF, tb);
+  await output(outputF, tb, null, uploadUrl);
   return true;
 }
 
@@ -276,20 +288,20 @@ async function do_parse(inputF, outputF, box, tsp, ocsp) {
   });
 
   if (isErr === false) {
-    output(outputF, textinfo.content, isWin);
+    await output(outputF, textinfo.content, isWin);
   }
 
   return true;
 }
 
-function unprotect(key, outputF) {
+async function unprotect(key, outputF) {
   key = key_param_parse(key);
   const buf = fs.readFileSync(key.path);
   const store = Priv.from_protected(buf, key.pw, algos());
 
-  store.keys.forEach(function (key) {
-    output(outputF, key.as_pem());
-  });
+  for(let key of store.keys) {
+    await output(outputF, key.as_pem());
+  }
 
   return true;
 }
@@ -301,7 +313,7 @@ async function main(argv, setIo) {
   jk.Curve.only_known = argv.only_known;
 
   if (argv.unprotect) {
-    return unprotect(argv.key, argv.output);
+    return await unprotect(argv.key, argv.output);
   }
 
   let box;
@@ -323,6 +335,7 @@ async function main(argv, setIo) {
       box,
       argv.input,
       argv.output,
+      argv.upload_url,
       argv.recipient_cert,
       argv.edrpou,
       argv.email,
