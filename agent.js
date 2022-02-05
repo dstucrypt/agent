@@ -145,6 +145,10 @@ async function do_sc(
     cert_rcrypt = Certificate.from_asn1(buf).as_pem();
     shouldCrypt = true;
   }
+  if (!box.keys[0].cert) {
+    error('No certificate loaded for key 0, use --cert filename or --cert-fetch url');
+    return;
+  }
 
   const ipn_ext = box.keys[0].cert.extension.ipn;
   const subject = box.keys[0].cert.subject;
@@ -292,7 +296,7 @@ async function do_parse(inputF, outputF, box, tsp, ocsp) {
     }
   });
 
-  if (isErr === false) {
+  if (isErr === false && outputF !== null) {
     await output(outputF, textinfo.content, isWin);
   }
 
@@ -328,6 +332,17 @@ async function main(argv, setIo) {
     box = await get_local_box(argv.key, argv.cert, argv.ca_path);
   }
 
+  let certFetch = argv['cert-fetch'];
+  if (certFetch) {
+    let urls = [];
+    if (typeof certFetch === 'string') {
+      urls = [certFetch];
+    } else if (Array.isArray(certFetch)) {
+      urls = certFetch;
+    }
+    await box.findCertsCmp(urls);
+  }
+
   if (argv.sign || argv.crypt) {
     if (argv.crypt === true && !argv.recipient_cert) {
       return error(
@@ -356,10 +371,10 @@ async function main(argv, setIo) {
     );
   }
 
-  if (argv.decrypt) {
+  if (argv.decrypt || argv.verify) {
     ret = await do_parse(
-      argv.input,
-      argv.output,
+      argv.input || argv.decrypt || argv.verify,
+      argv.verify ? null : argv.output,
       box,
       tsp_arg(argv.tsp),
       argv.ocsp
