@@ -54,6 +54,27 @@ Example commandline for privatbank keys:
                 --no-tax \
                 --tsp all
     
+## Certificate discovery
+
+For key-6.dat files you also have an option to let agent download certificates from CA server. JKS files don't need this, as certificates are part of jks file itself:
+
+    node index.js --sign \
+                --key Key-6.dat:password \
+                --cert-fetch http://acskidd.gov.ua/services/cmp/ \
+                --cert-fetch http://czo.gov.ua/services/cmp/ \
+                --input text.pdf --output text.pdf.p7s \
+                --no-tax \
+                --tsp all
+
+Notice, that cert-fetch can be passed more then once, in this case all mentioned URLs will be called in parallel. If you don't know the url of CMP service, you can let jkurwa guess cmp server urls from CA bundle. Please note, that all urls are being queried sequentially in order they are found in CA bundle and loading CA bundle takes some CPU time. Example:
+
+    node index.js --sign \
+                --key Key-6.dat:password \
+                --cert-fetch \
+                --ca_path CACertificates.3322cbdc.p7b \
+                --input text.pdf --output text.pdf.p7s \
+                --no-tax \
+                --tsp all
 
 ## Write detached signature
 
