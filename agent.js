@@ -395,6 +395,7 @@ async function main(argv, setIo) {
 
   if (argv.proxy) {
     return proxy.start({
+      host: argv.proxy === true ? '::' : argv.proxy,
       silent: argv.silent,
       bind: argv.bind,
       key: argv.connect_key,
