@@ -92,6 +92,7 @@ Since version 0.4.40 it's possible to use use jks files with agent. Since jks fi
 
  - personal - certificate belongs to natural person and has no record of any corporate entity;
  - fop (fizychna osoba pidpryjemets) - certificate belongs to natural person registered as private entrepreneur, technically this means that personal code (10, 9 or 8 digit DRFO) matches corporate code (EDRPOU);
+ - corporate - certificate belongs to company employee, director or government official, both DRFO and EDRPOU codes are present;
  - director - certificate either belongs to FOP or natural person that can sign on behalf of corporate entity, technicall this means that corporate code either matches drfo or drfo code is present and corporate code does not belong to natural person;
  - stamp - certificate belongs to corporate entity itself, not natural person;
  - other - personal code is present but does not match corporate code (relaxed version of director);
