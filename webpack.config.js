@@ -5,6 +5,6 @@ module.exports = {
   entry: './index.js',
   output: {
     path: path.resolve(__dirname),
-    filename: 'DSTUcheckSign.bundle.js'
+    filename: 'agent.bundle.js'
   }
 };
