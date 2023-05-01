@@ -288,9 +288,7 @@ async function do_parse(inputF, outputF, box, tsp, ocsp) {
       error("Signature-Time-TSP:", step.tokenTime / 1000);
     }
     if (step.signingTime) {
-      _d = new Date(step.signingTime)
-      _t = _d.toLocaleString()
-      error("Signature-Time:", step.signingTime / 1000, _t);
+      error("Signature-Time:", step.signingTime / 1000);
     }
 
     if (step.enc) {
