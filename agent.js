@@ -329,14 +329,8 @@ async function main(argv, setIo) {
 
   let box;
   if (argv.connect) {
-
-    box = await new Promise(
-      function(resolve,reject) {
-          //we need to pass argv to client.RemoteBox
-          var box = new client.remoteBox(resolve, argv); 
-      }
-    )
-  } else {
+    box = await client.remoteBox(argv); 
+} else {
     box = await get_local_box(argv.key, argv.cert, argv.ca_path);
   }
 
