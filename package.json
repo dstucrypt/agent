@@ -7,7 +7,7 @@
     "shtest": "bash test/test.sh",
     "test": "jest",
     "cover": "npm run test -- --coverage",
-	"bundle": "webpack"	
+    "bundle": "webpack"
   },
   "repository": {
     "type": "git",
