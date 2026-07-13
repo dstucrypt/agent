@@ -5,12 +5,21 @@ const http = require("./lib/http");
 const fs = require("fs");
 const encoding = require("encoding");
 const gost89 = require("gost89");
+const dstu7564 = require("dstu7564");
 const jk = require("jkurwa");
 
 const algos = gost89.compat.algos;
 const Certificate = jk.models.Certificate;
 const Priv = jk.models.Priv;
 const Box = jk.Box;
+
+function getHashByAlias(hashAlgo)  {
+  return {
+    gost: 'Gost34311',
+    dstu: 'Dstu7564-256',
+    kupyna: 'Dstu7564-256'
+  }[hashAlgo] || 'Gost34311';
+}
 
 const io = {
   stdout: process.stdout,
@@ -98,8 +107,34 @@ function listOf(value) {
   return [value];
 }
 
-async function get_local_box(key, cert, ca) {
-  const box = new Box({ algo: algos(), query: http.query });
+async function get_local_box(key, cert, ca, defaultHash) {
+  const gostAlgo = algos();
+  const hashes = {
+    Gost34311: function (data) {
+      return gostAlgo.hash(data);
+    },
+    Dstu4145le: function (data) {
+      return gostAlgo.hash(data);
+    },
+    'Dstu7564-256': function(data) {
+      return dstu7564.computeHash(32, data);
+    },
+    'Dstu7564-384': function(data) {
+      return dstu7564.computeHash(48, data);
+    },
+    'Dstu7564-512': function(data) {
+      return dstu7564.computeHash(64, data);
+    },
+    Dstu4145leWithDstu7564: function(data) {
+      return dstu7564.computeHash(32, data);
+    },
+  };
+  hashes['Dstu7564-256'].algo = 'Dstu7564-256';
+  hashes['Dstu7564-384'].algo = 'Dstu7564-384';
+  hashes['Dstu7564-512'].algo = 'Dstu7564-512';
+
+  const algo = Object.assign({}, gostAlgo, { hashes: hashes });
+  const box = new Box({ algo: algo, query: http.query, defaultHash });
   const keyInfo = listOf(key).map(key_param_parse);
   for (let { path, pw } of keyInfo) {
     let buf = await readFile(path);
@@ -135,7 +170,8 @@ async function do_sc(
   ocsp,
   includeChain,
   encode_win,
-  time
+  time,
+  hashAlgo
 ) {
   let content = await readFile(inputF);
   let cert_rcrypt;
@@ -188,6 +224,7 @@ async function do_sc(
       ocsp: ocsp,
       includeChain: includeChain,
       time: time,
+      hash: getHashByAlias(hashAlgo),
     });
   }
   if (shouldCrypt === true) {
@@ -207,6 +244,7 @@ async function do_sc(
       ocsp: ocsp,
       includeChain: includeChain,
       time: time,
+      hash: getHashByAlias(hashAlgo),
     });
   }
   const tb = await box.pipe(content, pipe, headers);
@@ -329,7 +367,7 @@ async function main(argv, setIo) {
   if (argv.connect) {
     box = await client.remoteBox(argv); 
 } else {
-    box = await get_local_box(argv.key, argv.cert, argv.ca_path);
+    box = await get_local_box(argv.key, argv.cert, argv.ca_path, getHashByAlias(argv.hash));
   }
 
   let certFetch = argv['cert-fetch'];
@@ -367,7 +405,8 @@ async function main(argv, setIo) {
       argv.ocsp,
       argv.include_chain,
       argv.encode_win,
-      argv.time && Number(argv.time)
+      argv.time && Number(argv.time),
+      argv.hash
     );
   }
 

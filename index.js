@@ -5,7 +5,8 @@ var argv = require("yargs")
   .option("edrpou", {})
   .string("edrpou")
   .option("detached", { default: false })
-  .option("role", { default: "director" }).argv;
+  .option("role", { default: "director" })
+  .option("hash", { default: "gost" }).argv;
 
 const agent = require("./agent");
 agent
