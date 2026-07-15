@@ -3,6 +3,7 @@ const client = require("./lib/frame/client.js");
 const proxy = require("./lib/frame/proxy.js");
 const http = require("./lib/http");
 const fs = require("fs");
+const path = require("path");
 const encoding = require("encoding");
 const gost89 = require("gost89");
 const dstu7564 = require("dstu7564");
@@ -78,11 +79,29 @@ function dateStr(d) {
     .slice(0, 14);
 }
 
+function startsWithDisk(pathName) {
+  if (process.platform !== 'win32') {
+    return false;
+  }
+  if (!path.isAbsolute(pathName)) {
+    return false;
+  }
+  let start = pathName.slice(0, 1);
+  return start !== '/' || start !== '\\';
+}
+
 function key_param_parse(key) {
   let pw;
-  if (key.indexOf(":") !== -1) {
-    pw = key.substr(key.indexOf(":") + 1);
-    key = key.substr(0, key.indexOf(":"));
+  let separatorIndex = key.indexOf(":");
+  // Special keys on windows:
+  // if path is absolute, then first colon cal be
+  // part of the disk drive
+  if (startsWithDisk(key)) {
+    separatorIndex = key.indexOf(":", separatorIndex + 1);
+  }
+  if (separatorIndex !== -1) {
+    pw = key.substr(separatorIndex + 1);
+    key = key.substr(0, separatorIndex);
   }
   return {
     path: key,
