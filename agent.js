@@ -5,11 +5,9 @@ const http = require("./lib/http");
 const fs = require("fs");
 const path = require("path");
 const encoding = require("encoding");
-const gost89 = require("gost89");
-const dstu7564 = require("dstu7564");
+const { algos } = require("dstucrypt-algos");
 const jk = require("jkurwa");
 
-const algos = gost89.compat.algos;
 const Certificate = jk.models.Certificate;
 const Priv = jk.models.Priv;
 const Box = jk.Box;
@@ -127,32 +125,7 @@ function listOf(value) {
 }
 
 async function get_local_box(key, cert, ca, defaultHash) {
-  const gostAlgo = algos();
-  const hashes = {
-    Gost34311: function (data) {
-      return gostAlgo.hash(data);
-    },
-    Dstu4145le: function (data) {
-      return gostAlgo.hash(data);
-    },
-    'Dstu7564-256': function(data) {
-      return dstu7564.computeHash(32, data);
-    },
-    'Dstu7564-384': function(data) {
-      return dstu7564.computeHash(48, data);
-    },
-    'Dstu7564-512': function(data) {
-      return dstu7564.computeHash(64, data);
-    },
-    Dstu4145leWithDstu7564: function(data) {
-      return dstu7564.computeHash(32, data);
-    },
-  };
-  hashes['Dstu7564-256'].algo = 'Dstu7564-256';
-  hashes['Dstu7564-384'].algo = 'Dstu7564-384';
-  hashes['Dstu7564-512'].algo = 'Dstu7564-512';
-
-  const algo = Object.assign({}, gostAlgo, { hashes: hashes });
+  const algo = algos();
   const box = new Box({ algo: algo, query: http.query, defaultHash });
   const keyInfo = listOf(key).map(key_param_parse);
   for (let { path, pw } of keyInfo) {

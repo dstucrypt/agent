@@ -39,7 +39,7 @@
     "webpack-cli": "^5.0.2"
   },
   "dependencies": {
-    "dstu7564": "^1.0.2",
+    "dstucrypt-algos": "^1.0.1",
     "encoding": "^0.1.12",
     "gost89": "^0.1.11",
     "jksreader": "^1.0.0",
